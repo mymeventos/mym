@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recepción de Invitados - Salón M&M</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-checkbox:checked {
+            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+            background-color: #4f46e5; /* indigo-600 */
+            border-color: #4f46e5;
+        }
+    </style>
+</head>
+<body class="bg-gray-200">
+
+    <div class="container mx-auto p-4 max-w-2xl">
+        <header class="text-center my-6">
+            <h1 class="text-3xl font-bold text-gray-800">Recepción de Invitados</h1>
+            <p id="event-name-header" class="text-lg text-indigo-600 font-semibold mt-1">&nbsp;</p>
+        </header>
+
+        <!-- Barra de Búsqueda y Contador -->
+        <div class="sticky top-0 bg-gray-200 py-4 z-10">
+            <div class="relative">
+                <input type="text" id="search-input" placeholder="Buscar invitado..." class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+            </div>
+            <div class="flex justify-between items-center mt-4 px-2 text-sm">
+                 <p class="text-gray-700 font-semibold">Total: <span id="total-guests">0</span></p>
+                 <p class="font-semibold text-green-600">Presentes: <span id="present-guests">0</span></p>
+                 <p class="font-semibold text-red-600">Ausentes: <span id="absent-guests">0</span></p>
+            </div>
+        </div>
+
+        <!-- Lista de Invitados -->
+        <main id="guest-list-container" class="mt-2 space-y-3 pb-20">
+            <div id="loading-state-recepcion" class="text-center py-20 text-gray-500">
+                <p>Cargando lista...</p>
+            </div>
+             <div id="no-results-state" class="hidden text-center py-20 text-gray-500">
+                <p>No se encontraron invitados con ese nombre.</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, query, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDtr9JCvgHriGZNfk1Exw-wl6zXGRrzawE",
+            authDomain: "salon-de-eventos-mm.firebaseapp.com",
+            projectId: "salon-de-eventos-mm",
+            storageBucket: "salon-de-eventos-mm.firebasestorage.app",
+            messagingSenderId: "1026723246426",
+            appId: "1:1026723246426:web:518abd5aecd6e279bc0363",
+            measurementId: "G-6QHQ0GDS25"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let guestsCollection;
+        let eventId;
+        let allGuests = [];
+
+        const searchInput = document.getElementById('search-input');
+        const guestListContainer = document.getElementById('guest-list-container');
+        const totalGuestsEl = document.getElementById('total-guests');
+        const presentGuestsEl = document.getElementById('present-guests');
+        const absentGuestsEl = document.getElementById('absent-guests');
+        const eventNameHeader = document.getElementById('event-name-header');
+        const loadingState = document.getElementById('loading-state-recepcion');
+        const noResultsState = document.getElementById('no-results-state');
+
+        // --- INICIALIZACIÓN ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            eventId = urlParams.get('eventId');
+
+            if (!eventId) {
+                document.body.innerHTML = '<div class="text-center p-8 text-red-500">Error: No se ha especificado un ID de evento. Por favor, accede desde el <a href="selector_de_eventos.html" class="underline">Panel de Eventos</a>.</div>';
+                return;
+            }
+
+            onAuthStateChanged(auth, user => {
+                if (user) {
+                    setupPageForEvent();
+                } else {
+                    signInAnonymously(auth).catch(error => console.error("Auth error:", error));
+                }
+            });
+        });
+
+        async function setupPageForEvent() {
+            const eventRef = doc(db, 'events', eventId);
+            const eventSnap = await getDoc(eventRef);
+            if (eventSnap.exists()) {
+                eventNameHeader.textContent = eventSnap.data().name;
+            } else {
+                eventNameHeader.textContent = "Evento no encontrado";
+            }
+
+            guestsCollection = collection(db, 'events', eventId, 'guests');
+            listenForGuests();
+        }
+
+        function listenForGuests() {
+            onSnapshot(query(guestsCollection), (snapshot) => {
+                loadingState.style.display = 'none';
+                allGuests = [];
+                snapshot.forEach(doc => {
+                    allGuests.push({ id: doc.id, ...doc.data() });
+                });
+                allGuests.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                
+                updateCounters();
+                filterAndRenderGuests();
+            }, (error) => {
+                console.error("Error al obtener invitados: ", error);
+                guestListContainer.innerHTML = `<div class="text-center py-20 text-red-500">Error al cargar la lista.</div>`;
+            });
+        }
+        
+        function updateCounters() {
+            const totalCount = allGuests.length;
+            const presentCount = allGuests.filter(g => g.presente).length;
+            const absentCount = totalCount - presentCount;
+
+            totalGuestsEl.textContent = totalCount;
+            presentGuestsEl.textContent = presentCount;
+            absentGuestsEl.textContent = absentCount;
+        }
+
+        function filterAndRenderGuests() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filteredGuests = allGuests.filter(guest => 
+                guest.nombre.toLowerCase().includes(searchTerm)
+            );
+
+            guestListContainer.innerHTML = '';
+
+            if (filteredGuests.length === 0 && allGuests.length > 0) {
+                noResultsState.style.display = 'block';
+            } else {
+                 noResultsState.style.display = 'none';
+            }
+            
+            filteredGuests.forEach(guest => {
+                const guestCard = document.createElement('div');
+                guestCard.className = `bg-white p-4 rounded-lg shadow-sm flex items-center justify-between transition-all duration-300 ${guest.presente ? 'bg-green-100 border-l-4 border-green-500' : ''}`;
+                
+                guestCard.innerHTML = `
+                    <div>
+                        <p class="font-semibold text-gray-800">${guest.nombre}</p>
+                        <p class="text-sm text-gray-500">Mesa: ${guest.mesa}</p>
+                    </div>
+                    <div class="flex items-center">
+                        <input 
+                            id="check-${guest.id}" 
+                            type="checkbox" 
+                            data-id="${guest.id}"
+                            class="custom-checkbox h-6 w-6 rounded text-indigo-600 border-gray-300 focus:ring-indigo-500 cursor-pointer"
+                            ${guest.presente ? 'checked' : ''}
+                        >
+                    </div>
+                `;
+                guestListContainer.appendChild(guestCard);
+            });
+        }
+
+        searchInput.addEventListener('input', filterAndRenderGuests);
+
+        guestListContainer.addEventListener('change', async (e) => {
+            if (e.target.type === 'checkbox') {
+                const guestId = e.target.dataset.id;
+                const isPresent = e.target.checked;
+                
+                const guestRef = doc(guestsCollection, guestId);
+                try {
+                    await updateDoc(guestRef, {
+                        presente: isPresent
+                    });
+                } catch (error) {
+                    console.error("Error al actualizar asistencia: ", error);
+                    alert("No se pudo actualizar la asistencia. Inténtalo de nuevo.");
+                    e.target.checked = !isPresent;
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

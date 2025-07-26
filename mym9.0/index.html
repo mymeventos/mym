@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pantalla Evento - Salón M&M</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body{margin:0;font-family:'Inter',sans-serif;background-color:black;color:white;display:flex;flex-direction:column;height:100vh;overflow:hidden}header{display:flex;justify-content:space-between;align-items:center;background-color:#0d0d0d;padding:15px 30px;font-size:32px;font-weight:bold;border-bottom:2px solid #00d6d6}#logo{height:50px}#fecha{font-family:'Montserrat',sans-serif;font-size:32.2px;color:#aaa}#hora{font-size:56px;color:#00d6d6}main{display:flex;flex:1;overflow:hidden}.left,.right{padding:25px;box-sizing:border-box}.left{width:55%;background-color:#1a1a1a;overflow-y:auto;border-right:2px solid #00d6d6}.right{width:45%;background-color:black;display:flex;flex-direction:column;gap:25px;overflow-y:auto}.cell{display:flex;justify-content:space-between;align-items:center;padding:15px 25px;font-size:22px;transition:all .4s ease-in-out;border-radius:8px;margin-bottom:8px}.cell span:first-child{font-weight:bold;min-width:90px}.cell span:last-child{flex-grow:1;text-align:right;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.past{background-color:#222;color:#777}.future{background-color:white;color:#1a1a1a;font-weight:bold}.present{background-color:#00d6d6;color:#1a1a1a;font-weight:bold;box-shadow:0 0 15px rgba(0,214,214,.6);transform:scale(1.02);border:2px solid #00d6d6}.box{background-color:#1a1a1a;color:white;border-radius:10px;padding:20px;font-size:22px;box-shadow:0 5px 15px rgba(0,0,0,.3)}.box-title{font-weight:bold;margin-bottom:12px;font-size:26px;color:#00d6d6;border-bottom:1px solid #333;padding-bottom:8px}.box b{display:inline-block;min-width:140px;color:#ccc}.asistencia-verde{color:#00e676;font-weight:bold}.asistencia-rojo{color:#ff5252;font-weight:bold}.barra-asistencia{height:12px;background-color:#00d6d6;border-radius:6px;margin-top:10px;transition:width .5s ease-in-out}
+  </style>
+</head>
+<body>
+  <header>
+    <img id="logo" src="https://placehold.co/200x50/0d0d0d/00d6d6?text=Logo+M%26M" alt="Logo del Salón">
+    <div id="fecha">Cargando evento...</div>
+    <div id="hora"></div>
+  </header>
+  <main>
+    <div class="left" id="bloque-horario"></div>
+    <div class="right" id="panel-derecho"></div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, query, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDtr9JCvgHriGZNfk1Exw-wl6zXGRrzawE",
+        authDomain: "salon-de-eventos-mm.firebaseapp.com",
+        projectId: "salon-de-eventos-mm",
+        storageBucket: "salon-de-eventos-mm.firebasestorage.app",
+        messagingSenderId: "1026723246426",
+        appId: "1:1026723246426:web:518abd5aecd6e279bc0363",
+        measurementId: "G-6QHQ0GDS25"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    let eventId;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        eventId = urlParams.get('eventId');
+        if (!eventId) {
+            document.body.innerHTML = '<div class="text-center p-8 text-red-500">Error: No se ha especificado un ID de evento.</div>';
+            return;
+        }
+
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                setupListeners();
+            } else {
+                signInAnonymously(auth).catch(console.error);
+            }
+        });
+    });
+
+    function setupListeners() {
+        // Escuchar cambios en los datos del evento (menús, timeline, etc.)
+        const eventRef = doc(db, 'events', eventId);
+        onSnapshot(eventRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const eventData = docSnap.data();
+                cargarTitulo(eventData.name);
+                cargarPanelDerecho(eventData);
+                actualizarBloqueHorario(eventData.timeline || []);
+            } else {
+                document.getElementById("fecha").textContent = "EVENTO NO ENCONTRADO";
+            }
+        });
+
+        // Escuchar cambios en la lista de invitados (asistencia)
+        const guestsRef = collection(db, 'events', eventId, 'guests');
+        onSnapshot(query(guestsRef), (snapshot) => {
+            let presentes = 0;
+            snapshot.forEach(doc => {
+                if (doc.data().presente) presentes++;
+            });
+            const total = snapshot.size;
+            actualizarAsistencia(presentes, total);
+        });
+
+        // Actualizar hora
+        actualizarHora();
+        setInterval(actualizarHora, 30000);
+    }
+
+    function actualizarAsistencia(presentes, total) {
+        const ausentes = total - presentes;
+        const porcentaje = total > 0 ? Math.round((presentes / total) * 100) : 0;
+        const asistenciaDiv = document.getElementById("asistencia");
+        if (asistenciaDiv) {
+             asistenciaDiv.innerHTML = `
+                <div class="box">
+                    <div class="box-title">Asistencia</div>
+                    <span class="asistencia-verde">Presentes: ${presentes}</span><br>
+                    <span class="asistencia-rojo">Ausentes: ${ausentes}</span>
+                    <div style="background-color: #333; border-radius: 6px; overflow: hidden; margin-top: 10px;">
+                        <div class="barra-asistencia" style="width: ${porcentaje}%;"></div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    function cargarTitulo(eventName) {
+      document.getElementById("fecha").innerText = eventName || "SALÓN M&M";
+    }
+
+    function cargarPanelDerecho(data) {
+      const panel = document.getElementById("panel-derecho");
+      const menus = data.menus || {};
+      const adulto = menus.adulto || {};
+      const infantil = menus.infantil || {};
+      
+      panel.innerHTML = `
+        <div class="box">
+          <div class="box-title">Menú Infantil (${infantil.cantidad || 0})</div>
+          <b>Entrada:</b> ${infantil.entrada || '-'}<br>
+          <b>Principal:</b> ${infantil.principal || '-'}<br>
+          <b>Postre:</b> ${infantil.postre || '-'}
+        </div>
+        <div class="box">
+          <div class="box-title">Menú Adulto (${adulto.cantidad || 0})</div>
+          <b>Entrada:</b> ${adulto.entrada || '-'}<br>
+          <b>Principal:</b> ${adulto.principal || '-'}<br>
+          <b>Postre:</b> ${adulto.postre || '-'}
+        </div>
+        <div class="box" style="min-height: 140px;">
+          <div class="box-title">Restricciones</div>
+          <div>${(data.restricciones || 'NINGUNA').replace(/\n/g, "<br>")}</div>
+        </div>
+        <div class="box">
+          <div class="box-title">Fin de Fiesta</div>
+          <b>Bandejeo:</b> ${data.finDeFiesta?.bandejeo || '-'}
+        </div>
+        <div id="asistencia"><div class="box"><div class="box-title">Asistencia</div><span>Cargando...</span></div></div>
+      `;
+    }
+    
+    function generarHoras() {
+      const horas = [];
+      for (let h = 21; h <= 23; h++) horas.push(`${h.toString().padStart(2, '0')}:00`, `${h.toString().padStart(2, '0')}:30`);
+      for (let h = 0; h <= 4; h++) horas.push(`${h.toString().padStart(2, '0')}:00`, `${h.toString().padStart(2, '0')}:30`);
+      horas.push("05:00");
+      return horas;
+    }
+
+    function actualizarBloqueHorario(timeline = []) {
+      const bloque = document.getElementById("bloque-horario");
+      if (!bloque) return;
+      bloque.innerHTML = '';
+      const ahora = new Date();
+      const horaActual = ahora.getHours();
+      const minutosActuales = ahora.getMinutes();
+      let normalizedActualHour = horaActual < 21 ? horaActual + 24 : horaActual;
+      const minutosTotalesActuales = normalizedActualHour * 60 + minutosActuales;
+      
+      const horas = generarHoras();
+      horas.forEach((displayHour, idx) => {
+        const [h, m] = displayHour.split(":").map(Number);
+        let normalizedCellHour = h < 21 ? h + 24 : h;
+        let minutosCelda = normalizedCellHour * 60 + m;
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        if (minutosTotalesActuales >= minutosCelda + 30) cell.classList.add("past");
+        else if (minutosTotalesActuales >= minutosCelda) cell.classList.add("present");
+        else cell.classList.add("future");
+        
+        cell.innerHTML = `<span>${displayHour}</span><span>${timeline[idx] || ""}</span>`;
+        bloque.appendChild(cell);
+      });
+
+      const presentCell = document.querySelector('.cell.present');
+      if (presentCell) presentCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function actualizarHora() {
+      const ahora = new Date();
+      const hora = ahora.getHours().toString().padStart(2, '0');
+      const minutos = ahora.getMinutes().toString().padStart(2, '0');
+      document.getElementById("hora").innerText = `${hora}:${minutos}`;
+    }
+  </script>
+</body>
+</html>

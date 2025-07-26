@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Eventos - Salón M&M</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .event-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="container mx-auto p-4 sm:p-8 max-w-6xl">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-gray-800">Panel de Control de Eventos</h1>
+            <p class="text-gray-600 mt-2">Crea, gestiona y selecciona los eventos del salón.</p>
+        </header>
+
+        <!-- Crear Nuevo Evento -->
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-10">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Crear Nuevo Evento</h2>
+            <form id="create-event-form" class="grid sm:grid-cols-3 gap-4 items-end">
+                <div class="sm:col-span-2">
+                    <label for="event-name" class="block text-sm font-medium text-gray-700">Nombre del Evento</label>
+                    <input type="text" id="event-name" placeholder="Ej: 15 de Morena, Boda de Ana y Juan" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                     <label for="event-date" class="block text-sm font-medium text-gray-700">Fecha del Evento</label>
+                    <input type="date" id="event-date" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <button type="submit" class="sm:col-span-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md shadow-sm transition-transform transform hover:scale-105">
+                    Crear Evento
+                </button>
+            </form>
+        </div>
+
+        <!-- Lista de Eventos -->
+        <div>
+            <h2 class="text-3xl font-semibold mb-6 text-gray-700">Mis Eventos</h2>
+            <div id="event-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Las tarjetas de eventos se insertarán aquí -->
+                <div id="loading-events" class="text-center text-gray-500 md:col-span-2 lg:col-span-3 py-10">Cargando eventos...</div>
+            </div>
+             <div id="no-events" class="hidden text-center text-gray-500 py-16">
+                <h3 class="text-xl font-medium">No hay eventos creados.</h3>
+                <p>Usa el formulario de arriba para crear tu primer evento.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación para Eliminar -->
+    <div id="delete-modal" class="hidden fixed inset-0 z-50"></div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, orderBy, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDtr9JCvgHriGZNfk1Exw-wl6zXGRrzawE",
+            authDomain: "salon-de-eventos-mm.firebaseapp.com",
+            projectId: "salon-de-eventos-mm",
+            storageBucket: "salon-de-eventos-mm.firebasestorage.app",
+            messagingSenderId: "1026723246426",
+            appId: "1:1026723246426:web:518abd5aecd6e279bc0363",
+            measurementId: "G-6QHQ0GDS25"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let eventsCollection;
+        let eventToDeleteId = null;
+
+        const createEventForm = document.getElementById('create-event-form');
+        const eventNameInput = document.getElementById('event-name');
+        const eventDateInput = document.getElementById('event-date');
+        const eventListEl = document.getElementById('event-list');
+        const loadingEventsEl = document.getElementById('loading-events');
+        const noEventsEl = document.getElementById('no-events');
+        const deleteModalEl = document.getElementById('delete-modal');
+
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                eventsCollection = collection(db, 'events');
+                listenForEvents();
+            } else {
+                signInAnonymously(auth).catch(error => console.error("Auth error:", error));
+            }
+        });
+
+        function listenForEvents() {
+            const q = query(eventsCollection, orderBy("date", "desc"));
+            onSnapshot(q, (snapshot) => {
+                loadingEventsEl.style.display = 'none';
+                if (snapshot.empty) {
+                    noEventsEl.style.display = 'block';
+                    eventListEl.innerHTML = '';
+                } else {
+                    noEventsEl.style.display = 'none';
+                    const events = [];
+                    snapshot.forEach(doc => events.push({ id: doc.id, ...doc.data() }));
+                    renderEvents(events);
+                }
+            }, console.error);
+        }
+
+        function renderEvents(events) {
+            eventListEl.innerHTML = '';
+            events.forEach(event => {
+                const card = document.createElement('div');
+                card.className = "event-card bg-white rounded-xl shadow-md p-6 flex flex-col justify-between transition-all duration-300";
+                const formattedDate = new Date(event.date + 'T00:00:00').toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+                
+                card.innerHTML = `
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">${event.name}</h3>
+                        <p class="text-gray-500 text-sm mb-4">${formattedDate}</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <a href="index_admin_final.html?eventId=${event.id}" class="bg-blue-500 hover:bg-blue-600 text-white text-center font-bold py-2 px-4 rounded-md">Editar Evento</a>
+                        <a href="admin_invitados.html?eventId=${event.id}" class="bg-green-500 hover:bg-green-600 text-white text-center font-bold py-2 px-4 rounded-md">Invitados</a>
+                        <a href="recepcionista.html?eventId=${event.id}" target="_blank" class="bg-gray-700 hover:bg-gray-800 text-white text-center font-bold py-2 px-4 rounded-md">Recepción</a>
+                        <a href="index.html?eventId=${event.id}" target="_blank" class="bg-black hover:bg-gray-900 text-white text-center font-bold py-2 px-4 rounded-md">Pantalla Cocina</a>
+                    </div>
+                    <button data-id="${event.id}" data-name="${event.name}" class="delete-event-btn absolute top-3 right-3 text-gray-400 hover:text-red-500">&times;</button>
+                `;
+                card.style.position = 'relative';
+                eventListEl.appendChild(card);
+            });
+        }
+
+        createEventForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const eventName = eventNameInput.value.trim();
+            const eventDate = eventDateInput.value;
+            if (eventName && eventDate && eventsCollection) {
+                await addDoc(eventsCollection, {
+                    name: eventName,
+                    date: eventDate,
+                    // Inicializamos los datos para evitar errores al editar por primera vez
+                    timeline: [],
+                    menus: {
+                        adulto: { entrada: '', principal: '', postre: '', cantidad: 0 },
+                        infantil: { entrada: '', principal: '', postre: '', cantidad: 0 },
+                        finDeFiesta: { bandeo: '' },
+                        restricciones: ''
+                    }
+                });
+                createEventForm.reset();
+            }
+        });
+
+        eventListEl.addEventListener('click', e => {
+            if (e.target.classList.contains('delete-event-btn')) {
+                eventToDeleteId = e.target.dataset.id;
+                openDeleteModal(e.target.dataset.name);
+            }
+        });
+
+        async function deleteEvent() {
+            if (!eventToDeleteId) return;
+            
+            const eventRef = doc(db, 'events', eventToDeleteId);
+            const guestsRef = collection(db, `events/${eventToDeleteId}/guests`);
+
+            try {
+                // Borrar todos los invitados en un lote
+                const guestsSnapshot = await getDocs(guestsRef);
+                const batch = writeBatch(db);
+                guestsSnapshot.forEach(guestDoc => batch.delete(guestDoc.ref));
+                await batch.commit();
+
+                // Borrar el evento principal
+                await deleteDoc(eventRef);
+                
+                closeModal(deleteModalEl);
+            } catch (error) {
+                console.error("Error deleting event:", error);
+                alert("Error al eliminar el evento.");
+            }
+        }
+
+        function openDeleteModal(name) {
+            deleteModalEl.innerHTML = createModalHTML({
+                title: 'Eliminar Evento',
+                body: `¿Estás seguro de que quieres eliminar el evento <strong>${name}</strong>? Se borrará toda su información, incluyendo la lista de invitados. Esta acción no se puede deshacer.`,
+                confirmText: 'Sí, Eliminar Evento',
+                confirmClass: 'bg-red-600 hover:bg-red-700',
+                onConfirm: deleteEvent,
+                modalId: 'delete-modal'
+            });
+            deleteModalEl.classList.remove('hidden');
+        }
+
+        function closeModal(modal) {
+            modal.classList.add('hidden');
+            modal.innerHTML = '';
+        }
+
+        function createModalHTML({ title, body, confirmText, confirmClass, onConfirm, modalId }) {
+            const modal = document.getElementById(modalId);
+            const confirmBtnId = `confirm-${modalId}`;
+            const cancelBtnId = `cancel-${modalId}`;
+
+            setTimeout(() => {
+                document.getElementById(confirmBtnId)?.addEventListener('click', onConfirm);
+                document.getElementById(cancelBtnId)?.addEventListener('click', () => closeModal(modal));
+            }, 0);
+
+            return `
+                <div class="flex items-center justify-center min-h-screen">
+                    <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+                    <div class="bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
+                        <div class="bg-white p-6">
+                            <h3 class="text-lg font-medium text-gray-900">${title}</h3>
+                            <div class="mt-2 text-sm text-gray-500">${body}</div>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                            <button id="${confirmBtnId}" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white ${confirmClass}">${confirmText}</button>
+                            <button id="${cancelBtnId}" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:w-auto">Cancelar</button>
+                        </div>
+                    </div>
+                </div>`;
+        }
+    </script>
+</body>
+</html>
