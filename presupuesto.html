@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presupuesto del Evento</title>
+    <style>
+        /* Estilos CSS integrados */
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #007BFF;
+            --background-color: #f4f7f6;
+            --card-bg-color: #ffffff;
+            --text-color: #333;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+        }
+
+        .main-content {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .budget-section, .payments-section, .summary-section, .other-expenses-section {
+            background-color: var(--card-bg-color);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+        }
+        
+        .guest-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+            margin-bottom: 1.5rem;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        .form-group input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .form-group input::-webkit-outer-spin-button,
+        .form-group input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .payment-form-row, .expense-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        #download-pdf-btn {
+            background-color: #f44336;
+        }
+        
+        #download-pdf-btn:hover {
+            background-color: #d32f2f;
+        }
+        
+        .summary-card {
+            background-color: #eaf8ea;
+            padding: 1rem;
+            border-left: 5px solid var(--primary-color);
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .summary-card h3 {
+            margin: 0;
+        }
+
+        .summary-card p {
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .payments-list, .expenses-list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 1rem;
+        }
+
+        .payment-item, .expense-item {
+            background-color: var(--background-color);
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .payment-item .delete-payment-btn, .expense-item .delete-expense-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+        }
+        
+        .payment-item .delete-payment-btn:hover, .expense-item .delete-expense-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        .payment-item span, .expense-item span {
+            font-weight: bold;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .back-link {
+            text-align: center;
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: bold;
+            padding: 12px 20px;
+            border: 1px solid var(--secondary-color);
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .back-link:hover {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        /* Estilos específicos para la versión impresa/PDF */
+        @media print {
+            body {
+                background-color: #fff;
+            }
+            .header, .action-buttons, .payments-section, .budget-section, .other-expenses-section {
+                display: none;
+            }
+            .main-content {
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            .summary-section {
+                box-shadow: none;
+                border: 1px solid #ccc;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <h1>Presupuesto del Evento: <span id="event-name"></span></h1>
+    </header>
+
+    <main class="main-content" id="content-to-print">
+        <section class="budget-section">
+            <h2>Costo por Invitado</h2>
+            <form id="cost-form">
+                <div class="guest-row">
+                    <div class="form-group">
+                        <label for="costo-adultos">Precio por Adulto</label>
+                        <input type="number" id="costo-adultos" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="cant-adultos">Cantidad</label>
+                        <input type="number" id="cant-adultos" min="0" value="0">
+                    </div>
+                </div>
+                
+                <div class="guest-row">
+                    <div class="form-group">
+                        <label for="costo-adolescentes-infantiles">Precio por Adolescente/Infantil</label>
+                        <input type="number" id="costo-adolescentes-infantiles" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="cant-adolescentes-infantiles">Cantidad</label>
+                        <input type="number" id="cant-adolescentes-infantiles" min="0" value="0">
+                    </div>
+                </div>
+                <button type="submit" id="save-costs-btn">Guardar Costos</button>
+            </form>
+        </section>
+        
+        <section class="other-expenses-section">
+            <h2>Otros Gastos del Evento</h2>
+            <form id="expense-form">
+                <div class="expense-form-row">
+                    <div class="form-group">
+                        <label for="expense-name">Nombre del Gasto</label>
+                        <input type="text" id="expense-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expense-cost">Costo</label>
+                        <input type="number" id="expense-cost" min="0" required>
+                    </div>
+                </div>
+                <button type="submit">Agregar Gasto</button>
+            </form>
+            <h3>Lista de Gastos</h3>
+            <ul id="expenses-list" class="expenses-list">
+            </ul>
+        </section>
+
+        <section class="summary-section">
+            <h2>Resumen del Presupuesto</h2>
+            <div class="summary-card">
+                <h3>Total del Presupuesto</h3>
+                <p><span id="total-presupuesto">$0.00</span></p>
+            </div>
+            <div class="summary-card">
+                <h3>Total Pagado</h3>
+                <p><span id="total-pagado">$0.00</span></p>
+            </div>
+            <div class="summary-card" style="background-color: #ffeaea; border-left: 5px solid #f44336;">
+                <h3>Saldo Pendiente</h3>
+                <p><span id="saldo-pendiente">$0.00</span></p>
+            </div>
+        </section>
+
+        <section class="payments-section">
+            <h2>Gestión de Pagos</h2>
+            <form id="payment-form">
+                <div class="payment-form-row">
+                    <div class="form-group">
+                        <label for="pago-monto">Monto del Pago</label>
+                        <input type="number" id="pago-monto" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pago-medio">Medio de Pago</label>
+                        <select id="pago-medio" required>
+                            <option value="transferencia">Transferencia</option>
+                            <option value="tarjeta">Tarjeta</option>
+                            <option value="efectivo">Efectivo</option>
+                            <option value="cheque">Cheque</option>
+                            <option value="otros">Otros</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit">Agregar Pago</button>
+            </form>
+            <h3>Historial de Pagos</h3>
+            <ul id="payments-list" class="payments-list">
+            </ul>
+        </section>
+
+    </main>
+    
+    <div class="action-buttons">
+        <button id="download-pdf-btn">Descargar Presupuesto PDF</button>
+        <a href="index.html" class="back-link">← Volver al Gestor de Eventos</a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, updateDoc, collection, addDoc, deleteDoc, query, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        // CONFIGURACIÓN DE FIREBASE (Usa la misma que en index.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5RTAhwU-HlvMl_B2jmzNvrYRefOjGqrs",
+            authDomain: "flor-ee15d.firebaseapp.com",
+            projectId: "flor-ee15d",
+            storageBucket: "flor-ee15d.firebasestorage.app",
+            messagingSenderId: "814685471419",
+            appId: "1:814685471419:web:0d2ffe96939349fbe6df9e",
+            measurementId: "G-NJ427BC4ZT"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const costoAdultosInput = document.getElementById('costo-adultos');
+            const cantAdultosInput = document.getElementById('cant-adultos');
+            const costoAdolescentesInfantilesInput = document.getElementById('costo-adolescentes-infantiles');
+            const cantAdolescentesInfantilesInput = document.getElementById('cant-adolescentes-infantiles');
+            
+            const totalPresupuestoSpan = document.getElementById('total-presupuesto');
+            const totalPagadoSpan = document.getElementById('total-pagado');
+            const saldoPendienteSpan = document.getElementById('saldo-pendiente');
+            
+            const costForm = document.getElementById('cost-form');
+            const paymentForm = document.getElementById('payment-form');
+            const pagoMontoInput = document.getElementById('pago-monto');
+            const pagoMedioSelect = document.getElementById('pago-medio');
+            const paymentsList = document.getElementById('payments-list');
+            
+            const expenseForm = document.getElementById('expense-form');
+            const expenseNameInput = document.getElementById('expense-name');
+            const expenseCostInput = document.getElementById('expense-cost');
+            const expensesList = document.getElementById('expenses-list');
+
+            const eventNameHeader = document.getElementById('event-name');
+            const downloadPdfBtn = document.getElementById('download-pdf-btn');
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const eventId = urlParams.get('id');
+
+            if (!eventId) {
+                console.error("Error: No se encontró el ID del evento en la URL.");
+                document.body.innerHTML = '<h1>Error: No se encontró el ID del evento.</h1><p>Asegúrate de acceder a esta página desde un evento en el gestor principal.</p>';
+                return;
+            }
+            
+            console.log(`Cargando datos para el evento con ID: ${eventId}`);
+
+            // === Referencias a los documentos y colecciones de Firestore ===
+            const eventDocRef = doc(db, 'events', eventId);
+            const presupuestoDocRef = doc(db, 'events', eventId, 'presupuesto', 'datos');
+            const paymentsCollectionRef = collection(presupuestoDocRef, 'pagos');
+            const expensesCollectionRef = collection(presupuestoDocRef, 'gastosExtras');
+            
+            let presupuestoData = {
+                costoAdultos: 0,
+                cantAdultos: 0,
+                costoAdolescentesInfantiles: 0,
+                cantAdolescentesInfantiles: 0
+            };
+            let totalGastosExtras = 0;
+            let totalPagos = 0;
+            
+            // Función centralizada para actualizar el resumen (con formato de miles)
+            const updateSummary = () => {
+                console.log('Actualizando resumen...');
+                const totalCalculado = (presupuestoData.costoAdultos * presupuestoData.cantAdultos) +
+                                     (presupuestoData.costoAdolescentesInfantiles * presupuestoData.cantAdolescentesInfantiles) +
+                                     totalGastosExtras;
+                
+                const saldoPendiente = totalCalculado - totalPagos;
+                
+                // Formato de números con separador de miles
+                const formatter = new Intl.NumberFormat('es-AR', {
+                  style: 'currency',
+                  currency: 'ARS', // Puedes cambiar 'ARS' a 'USD' o 'EUR' según tu necesidad
+                  minimumFractionDigits: 2,
+                });
+
+                totalPresupuestoSpan.textContent = formatter.format(totalCalculado);
+                totalPagadoSpan.textContent = formatter.format(totalPagos);
+                saldoPendienteSpan.textContent = formatter.format(saldoPendiente);
+            };
+
+            // Escuchar cambios en los costos por invitado en tiempo real
+            onSnapshot(presupuestoDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    presupuestoData = docSnap.data();
+                    costoAdultosInput.value = presupuestoData.costoAdultos || 0;
+                    cantAdultosInput.value = presupuestoData.cantAdultos || 0;
+                    costoAdolescentesInfantilesInput.value = presupuestoData.costoAdolescentesInfantiles || 0;
+                    cantAdolescentesInfantilesInput.value = presupuestoData.cantAdolescentesInfantiles || 0;
+                    console.log('Datos de presupuesto cargados:', presupuestoData);
+                } else {
+                    // Si no existe, creamos el documento inicial
+                    console.log('Documento de presupuesto no existe, creándolo...');
+                    setDoc(presupuestoDocRef, presupuestoData);
+                }
+                updateSummary();
+            }, (error) => {
+                console.error("Error al escuchar el documento de presupuesto:", error);
+            });
+            
+            // Escuchar cambios en la colección de pagos en tiempo real
+            onSnapshot(query(paymentsCollectionRef, orderBy('timestamp', 'desc')), (snapshot) => {
+                paymentsList.innerHTML = '';
+                totalPagos = 0;
+                if (snapshot.empty) {
+                    paymentsList.innerHTML = '<p>No hay pagos registrados aún.</p>';
+                } else {
+                    snapshot.forEach(doc => {
+                        const pago = doc.data();
+                        const li = document.createElement('li');
+                        li.className = 'payment-item';
+                        li.innerHTML = `
+                            <span>$${pago.monto.toFixed(2)}</span>
+                            <span>Medio: ${pago.medio.charAt(0).toUpperCase() + pago.medio.slice(1)}</span>
+                            <button class="delete-payment-btn" data-id="${doc.id}">×</button>
+                        `;
+                        paymentsList.appendChild(li);
+                        totalPagos += pago.monto;
+                    });
+                }
+                console.log('Pagos cargados. Total pagado:', totalPagos);
+                updateSummary();
+            }, (error) => {
+                console.error("Error al escuchar la colección de pagos:", error);
+            });
+            
+            // Escuchar cambios en la colección de gastos extras en tiempo real
+            onSnapshot(query(expensesCollectionRef, orderBy('nombre')), (snapshot) => {
+                expensesList.innerHTML = '';
+                totalGastosExtras = 0;
+                if (snapshot.empty) {
+                    expensesList.innerHTML = '<p>No hay gastos extras registrados aún.</p>';
+                } else {
+                    snapshot.forEach(doc => {
+                        const gasto = doc.data();
+                        const li = document.createElement('li');
+                        li.className = 'expense-item';
+                        li.innerHTML = `
+                            <span>${gasto.nombre}</span>
+                            <span>$${gasto.costo.toFixed(2)}</span>
+                            <button class="delete-expense-btn" data-id="${doc.id}">×</button>
+                        `;
+                        expensesList.appendChild(li);
+                        totalGastosExtras += gasto.costo;
+                    });
+                }
+                console.log('Gastos extras cargados. Total gastos:', totalGastosExtras);
+                updateSummary();
+            }, (error) => {
+                console.error("Error al escuchar la colección de gastos:", error);
+            });
+            
+            // Cargar el nombre del evento
+            onSnapshot(eventDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    eventNameHeader.textContent = docSnap.data().name;
+                } else {
+                    eventNameHeader.textContent = 'Evento no encontrado';
+                }
+            }, (error) => {
+                console.error("Error al cargar el nombre del evento:", error);
+            });
+
+            // Event listener para el nuevo botón "Guardar Costos"
+            costForm.addEventListener('submit', async (e) => {
+                e.preventDefault(); // Evita que la página se recargue
+                const dataToSave = {
+                    costoAdultos: parseFloat(costoAdultosInput.value) || 0,
+                    cantAdultos: parseFloat(cantAdultosInput.value) || 0,
+                    costoAdolescentesInfantiles: parseFloat(costoAdolescentesInfantilesInput.value) || 0,
+                    cantAdolescentesInfantiles: parseFloat(cantAdolescentesInfantilesInput.value) || 0,
+                };
+                try {
+                    await updateDoc(presupuestoDocRef, dataToSave);
+                    console.log('Datos de costos guardados con éxito.');
+                } catch (e) {
+                    console.error('Error al guardar datos de costos:', e);
+                }
+            });
+
+            // Event listener para agregar pagos (guarda en Firestore)
+            paymentForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const monto = parseFloat(pagoMontoInput.value);
+                const medio = pagoMedioSelect.value;
+                if (monto > 0 && medio) {
+                    try {
+                        await addDoc(paymentsCollectionRef, {
+                            monto: monto,
+                            medio: medio,
+                            timestamp: new Date().getTime()
+                        });
+                        paymentForm.reset();
+                    } catch (e) {
+                        console.error('Error al agregar un pago:', e);
+                    }
+                }
+            });
+            
+            // Event listener para agregar gastos extras (guarda en Firestore)
+            expenseForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const nombre = expenseNameInput.value.trim();
+                const costo = parseFloat(expenseCostInput.value);
+                if (nombre !== '' && costo >= 0) {
+                    try {
+                        await addDoc(expensesCollectionRef, {
+                            nombre: nombre,
+                            costo: costo
+                        });
+                        expenseForm.reset();
+                    } catch (e) {
+                        console.error('Error al agregar un gasto:', e);
+                    }
+                }
+            });
+            
+            // === Event listener para eliminar pagos y gastos ===
+            // Event listener para eliminar un pago
+            paymentsList.addEventListener('click', async (e) => {
+                if (e.target.classList.contains('delete-payment-btn')) {
+                    const docId = e.target.dataset.id;
+                    if (confirm('¿Estás seguro de que quieres eliminar este pago?')) {
+                        try {
+                            await deleteDoc(doc(paymentsCollectionRef, docId));
+                            console.log('Pago eliminado con éxito.');
+                        } catch (e) {
+                            console.error('Error al eliminar el pago:', e);
+                        }
+                    }
+                }
+            });
+
+            // Event listener para eliminar un gasto extra (borra de Firestore)
+            expensesList.addEventListener('click', async (e) => {
+                if (e.target.classList.contains('delete-expense-btn')) {
+                    const docId = e.target.dataset.id;
+                    if (confirm('¿Estás seguro de que quieres eliminar este gasto?')) {
+                        try {
+                            await deleteDoc(doc(expensesCollectionRef, docId));
+                            console.log('Gasto eliminado con éxito.');
+                        } catch (e) {
+                            console.error('Error al eliminar el gasto:', e);
+                        }
+                    }
+                }
+            });
+            
+            // Event listener para descargar PDF
+            downloadPdfBtn.addEventListener('click', () => {
+                const element = document.getElementById('content-to-print');
+                const options = {
+                    margin: 15,
+                    filename: 'presupuesto-evento.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().from(element).set(options).save();
+            });
+        });
+    </script>
+</body>
+</html>
