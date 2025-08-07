@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accesorios y Extras</title>
+    <style>
+        /* Estilos CSS integrados */
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #007BFF;
+            --background-color: #f4f7f6;
+            --card-bg-color: #ffffff;
+            --text-color: #333;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+        }
+
+        .main-content {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .accessories-section {
+            background-color: var(--card-bg-color);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+        }
+
+        .accessory-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .accessory-item {
+            position: relative;
+            background-color: var(--background-color);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: background-color 0.3s ease;
+        }
+
+        .accessory-item:hover {
+            background-color: #e9e9e9;
+        }
+        
+        .accessory-item input[type="checkbox"] {
+            margin-right: 1rem;
+            min-width: 20px;
+            min-height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary-color);
+        }
+        
+        .accessory-item.other-item {
+            display: flex;
+            align-items: center;
+            padding-right: 40px; /* Espacio para el botón de borrar */
+        }
+        
+        .accessory-item input[type="text"] {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .accessory-item label {
+            font-size: 1rem;
+            cursor: pointer;
+            flex-grow: 1;
+        }
+
+        .add-other-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+            margin-top: 1.5rem;
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .add-other-btn:hover {
+            background-color: #0056b3;
+        }
+        
+        .delete-other-btn {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+        }
+        
+        .delete-other-btn:hover {
+            background-color: #d32f2f;
+        }
+        
+        .save-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+            margin-top: 1.5rem;
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
+
+        .save-btn:hover {
+            background-color: #45a049;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 2rem;
+            text-align: center;
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: bold;
+            padding: 12px 20px;
+            border: 1px solid var(--secondary-color);
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .back-link:hover {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        #otros-container {
+            display: contents;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <h1>Accesorios y Extras</h1>
+    </header>
+
+    <main class="main-content">
+        <section class="accessories-section">
+            <h2>Selecciona los extras para tu evento</h2>
+            <form id="accessories-form">
+                <ul class="accessory-list" id="accessory-list">
+                    <li class="accessory-item">
+                        <input type="checkbox" id="animador" name="animador" checked>
+                        <label for="animador">Animador</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="sonido" name="sonido" checked>
+                        <label for="sonido">Sonido</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="limpieza" name="limpieza" checked>
+                        <label for="limpieza">Limpieza</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="mozos" name="mozos" checked>
+                        <label for="mozos">Mozos</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="manteleria" name="manteleria" checked>
+                        <label for="manteleria">Mantelería</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="velas" name="velas">
+                        <label for="velas">Velas</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="chispas-frias" name="chispas-frias">
+                        <label for="chispas-frias">Chispas Frías</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="rosas" name="rosas">
+                        <label for="rosas">Rosas</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="fotocabina" name="fotocabina">
+                        <label for="fotocabina">Fotocabina</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="plataforma-360" name="plataforma-360">
+                        <label for="plataforma-360">Plataforma 360</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="heladeria" name="heladeria">
+                        <label for="heladeria">Heladería</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="candybar" name="candybar">
+                        <label for="candybar">Candy Bar</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="cascada-chocolate" name="cascada-chocolate">
+                        <label for="cascada-chocolate">Cascada de Chocolate</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="mesa-dulce" name="mesa-dulce">
+                        <label for="mesa-dulce">Mesa Dulce</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="torta" name="torta">
+                        <label for="torta">Torta</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="chopera" name="chopera">
+                        <label for="chopera">Chopera</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="mariachi" name="mariachi">
+                        <label for="mariachi">Mariachi</label>
+                    </li>
+                    <li class="accessory-item">
+                        <input type="checkbox" id="banda" name="banda">
+                        <label for="banda">Banda</label>
+                    </li>
+                     <div id="otros-container"></div>
+                </ul>
+                <button type="button" class="add-other-btn" id="add-other-btn">Agregar Otro Extra</button>
+            </form>
+            <button class="save-btn" id="save-accessories-btn">Guardar Selección</button>
+        </section>
+        
+        <a href="index.html" class="back-link">← Volver al Gestor de Eventos</a>
+    </main>
+
+    <script>
+        // Lógica de la Aplicación (JavaScript)
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('accessories-form');
+            const saveBtn = document.getElementById('save-accessories-btn');
+            const addOtherBtn = document.getElementById('add-other-btn');
+            const otrosContainer = document.getElementById('otros-container');
+            const accessoryList = document.getElementById('accessory-list');
+
+            // Cargar datos de localStorage
+            const loadAccessories = () => {
+                const accessories = JSON.parse(localStorage.getItem('selectedAccessories')) || {};
+                
+                // Cargar el estado de los checkboxes predefinidos
+                for (const key in accessories) {
+                    if (typeof accessories[key] === 'boolean' && accessories.hasOwnProperty(key)) {
+                        const checkbox = document.getElementById(key);
+                        if (checkbox) {
+                            checkbox.checked = accessories[key];
+                        }
+                    }
+                }
+                
+                // Cargar los campos de "Otros"
+                if (Array.isArray(accessories.otros) && accessories.otros.length > 0) {
+                    accessories.otros.forEach(item => addOtherItemToDOM(item));
+                }
+            };
+
+            // Guardar datos en localStorage
+            const saveAccessories = () => {
+                const accessories = {};
+                const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+                
+                checkboxes.forEach(checkbox => {
+                    accessories[checkbox.id] = checkbox.checked;
+                });
+                
+                // Guardar los valores de los campos "Otros"
+                const otherItems = [];
+                const otherInputs = otrosContainer.querySelectorAll('input[type="text"]');
+                otherInputs.forEach(input => {
+                    if (input.value.trim() !== '') {
+                        otherItems.push(input.value.trim());
+                    }
+                });
+                accessories.otros = otherItems;
+                
+                localStorage.setItem('selectedAccessories', JSON.stringify(accessories));
+                alert('¡Accesorios guardados correctamente!');
+            };
+            
+            // Función para agregar un campo de "Otro" al DOM
+            const addOtherItemToDOM = (value = '') => {
+                const listItem = document.createElement('li');
+                listItem.className = 'accessory-item other-item';
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = 'Escribe otro extra...';
+                input.value = value;
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-other-btn';
+                deleteBtn.textContent = '×';
+                deleteBtn.type = 'button';
+                deleteBtn.onclick = () => {
+                    listItem.remove();
+                };
+                
+                listItem.appendChild(input);
+                listItem.appendChild(deleteBtn);
+                otrosContainer.appendChild(listItem);
+            };
+
+            // Event listener para el botón de guardar
+            saveBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                saveAccessories();
+            });
+            
+            // Event listener para el botón de agregar otro
+            addOtherBtn.addEventListener('click', () => {
+                addOtherItemToDOM();
+            });
+            
+            // Inicializar la interfaz
+            loadAccessories();
+        });
+    </script>
+</body>
+</html>
