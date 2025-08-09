@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presupuesto del Evento</title>
+    <style>
+        /* Estilos CSS para la vista de la web */
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #007BFF;
+            --background-color: #f4f7f6;
+            --card-bg-color: #ffffff;
+            --text-color: #333;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+        }
+
+        .main-content {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .payments-section, .other-expenses-section, .guest-estimate-section, .budget-summary-section {
+            background-color: var(--card-bg-color);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        
+        .form-group input:read-only {
+            background-color: #e9ecef;
+        }
+
+        .form-group input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .form-group input::-webkit-outer-spin-button,
+        .form-group input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .payment-form-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .payment-form-row .form-group:nth-child(2),
+        .payment-form-row .form-group:nth-child(3) {
+            grid-column: span 1;
+        }
+
+        .payment-form-row .form-group:first-child {
+            grid-column: span 2;
+        }
+        
+        .expense-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        .guest-estimate-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        #download-pdf-btn {
+            background-color: #f44336;
+        }
+        
+        #download-pdf-btn:hover {
+            background-color: #d32f2f;
+        }
+        
+        .guest-summary {
+            margin-top: 2rem;
+            border-top: 1px solid #ccc;
+            padding-top: 1rem;
+        }
+        
+        .guest-summary h3 {
+            margin-bottom: 1rem;
+        }
+        
+        .guest-summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .guest-summary-item p {
+            margin: 0;
+        }
+        
+        .guest-summary-item p:first-child {
+            font-weight: bold;
+        }
+        
+        .guest-summary-item p:last-child {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        .guest-summary-total {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px dashed #ccc;
+            font-weight: bold;
+        }
+
+        .payments-list, .expenses-list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 1rem;
+        }
+        
+        .payment-item, .expense-item {
+            background-color: var(--background-color);
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .payment-item .delete-payment-btn, .expense-item .delete-expense-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+        }
+        
+        .payment-item .delete-payment-btn:hover, .expense-item .delete-expense-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        .payment-item span, .expense-item span {
+            font-weight: bold;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .back-link {
+            text-align: center;
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: bold;
+            padding: 12px 20px;
+            border: 1px solid var(--secondary-color);
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .back-link:hover {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        /* Estilos específicos para la impresión */
+        @media print {
+            body {
+                background-color: white;
+                color: black;
+                padding: 0;
+                margin: 0;
+            }
+            .main-content {
+                box-shadow: none;
+                padding: 0;
+                margin: 0;
+            }
+            .header, .action-buttons, .form-group, .payments-section h2, .other-expenses-section h2, .budget-summary-section h2 {
+                display: none;
+            }
+            .print-content {
+                display: block;
+                font-family: sans-serif;
+                color: black;
+                padding: 20px;
+            }
+            .print-section {
+                border: 1px solid #ccc;
+                padding: 15px;
+                margin-bottom: 20px;
+                border-radius: 8px;
+            }
+            .print-section h2 {
+                color: #4CAF50;
+                border-bottom: 2px solid #4CAF50;
+                padding-bottom: 5px;
+                margin-bottom: 10px;
+                display: block !important;
+            }
+            .print-item {
+                margin-bottom: 10px;
+                display: flex;
+                justify-content: space-between;
+            }
+            .print-item strong {
+                display: inline-block;
+                min-width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <h1>Presupuesto del Evento: <span id="event-name"></span></h1>
+    </header>
+
+    <main class="main-content">
+
+        <section class="guest-estimate-section">
+            <h2>Estimado de Invitados</h2>
+            <div class="guest-estimate-grid">
+                <div class="form-group">
+                    <label for="estimated-adults">Adultos</label>
+                    <input type="number" id="estimated-adults" min="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="estimated-teens-children">Adolescentes/Niños</label>
+                    <input type="number" id="estimated-teens-children" min="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="estimated-total">Total Estimado</label>
+                    <input type="number" id="estimated-total" value="0" readonly>
+                </div>
+            </div>
+        </section>
+        
+        <section class="payments-section">
+            <h2>Gestión de Pagos (Cubiertos)</h2>
+            <form id="payment-form">
+                <div class="payment-form-row">
+                    <div class="form-group">
+                        <label for="pago-medio">Medios de Pago</label>
+                        <select id="pago-medio" required>
+                            <option value="transferencia">Transferencia</option>
+                            <option value="tarjeta">Tarjeta</option>
+                            <option value="efectivo">Efectivo</option>
+                            <option value="cheque">Cheque</option>
+                            <option value="otros">Otros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="pago-fecha">Fecha de Pago</label>
+                        <input type="date" id="pago-fecha" required>
+                    </div>
+                </div>
+                <div class="payment-form-row">
+                    <div class="form-group">
+                        <label for="guest-quantity">Cantidad de Personas</label>
+                        <input type="number" id="guest-quantity" min="1" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="guest-type">Tipo de Invitado</label>
+                        <select id="guest-type" required>
+                            <option value="adulto">Adulto</option>
+                            <option value="adolescente-infantil">Adolescente/Infantil</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="guest-price">Precio por Persona</label>
+                        <input type="number" id="guest-price" min="0" required>
+                    </div>
+                </div>
+                <button type="submit">Agregar Pago</button>
+            </form>
+            
+            <div id="guest-payments-summary" class="guest-summary">
+                <h3>Total de Invitados Pagados</h3>
+                <div id="guest-summary-list"></div>
+            </div>
+            
+            <h3>Historial de Pagos</h3>
+            <ul id="payments-list" class="payments-list">
+            </ul>
+        </section>
+
+        <section class="other-expenses-section">
+            <h2>Otros Gastos del Evento</h2>
+            <form id="expense-form">
+                <div class="expense-form-row">
+                    <div class="form-group">
+                        <label for="expense-name">Nombre del Gasto</label>
+                        <input type="text" id="expense-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expense-cost">Costo</label>
+                        <input type="number" id="expense-cost" min="0" required>
+                    </div>
+                </div>
+                <button type="submit">Agregar Gasto</button>
+            </form>
+            <h3>Lista de Gastos</h3>
+            <ul id="expenses-list" class="expenses-list">
+            </ul>
+        </section>
+
+        <section class="budget-summary-section">
+            <h2>Resumen del Presupuesto</h2>
+            <div class="guest-summary">
+                <div class="guest-summary-item">
+                    <p>Total de Pagos (Cubiertos):</p>
+                    <p id="total-payments-amount">$0.00</p>
+                </div>
+                <div class="guest-summary-item">
+                    <p>Total de Otros Gastos:</p>
+                    <p id="total-expenses-amount">$0.00</p>
+                </div>
+                <div class="guest-summary-item guest-summary-total">
+                    <p>Total General del Evento:</p>
+                    <p id="total-budget-amount">$0.00</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <div class="action-buttons">
+        <button id="download-pdf-btn" onclick="imprimirPresupuesto()">Descargar PDF</button>
+        <a href="index.html" class="back-link">← Volver al Gestor de Eventos</a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, doc, collection, addDoc, deleteDoc, query, onSnapshot, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5RTAhwU-HlvMl_B2jmzNvrYRefOjGqrs",
+            authDomain: "flor-ee15d.firebaseapp.com",
+            projectId: "flor-ee15d",
+            storageBucket: "flor-ee15d.firebasestorage.app",
+            messagingSenderId: "814685471419",
+            appId: "1:814685471419:web:0d2ffe96939349fbe6df9e",
+            measurementId: "G-NJ427BC4ZT"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const paymentForm = document.getElementById('payment-form');
+            const pagoMedioSelect = document.getElementById('pago-medio');
+            const pagoFechaInput = document.getElementById('pago-fecha');
+            const guestQuantityInput = document.getElementById('guest-quantity');
+            const guestTypeSelect = document.getElementById('guest-type');
+            const guestPriceInput = document.getElementById('guest-price');
+            const paymentsList = document.getElementById('payments-list');
+            
+            const guestSummaryList = document.getElementById('guest-summary-list');
+            const expensesList = document.getElementById('expenses-list');
+            const expenseForm = document.getElementById('expense-form');
+            const expenseNameInput = document.getElementById('expense-name');
+            const expenseCostInput = document.getElementById('expense-cost');
+
+            const estimatedAdultsInput = document.getElementById('estimated-adults');
+            const estimatedTeensChildrenInput = document.getElementById('estimated-teens-children');
+            const estimatedTotalInput = document.getElementById('estimated-total');
+
+            const eventNameHeader = document.getElementById('event-name');
+            const downloadPdfBtn = document.getElementById('download-pdf-btn');
+            
+            const totalPaymentsAmountElement = document.getElementById('total-payments-amount');
+            const totalExpensesAmountElement = document.getElementById('total-expenses-amount');
+            const totalBudgetAmountElement = document.getElementById('total-budget-amount');
+
+            let eventName = '';
+            let estimatedAdults = 0;
+            let estimatedTeens = 0;
+            let paymentsData = [];
+            let expensesData = [];
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const eventId = urlParams.get('id');
+
+            if (!eventId) {
+                document.body.innerHTML = '<h1>Error: No se encontró el ID del evento.</h1><p>Asegúrate de acceder a esta página desde un evento en el gestor principal.</p>';
+                return;
+            }
+            
+            const eventDocRef = doc(db, 'events', eventId);
+            const paymentsCollectionRef = collection(db, 'events', eventId, 'payments');
+            const expensesCollectionRef = collection(db, 'events', eventId, 'expenses');
+            
+            const formatter = new Intl.NumberFormat('es-AR', {
+                style: 'currency',
+                currency: 'ARS',
+                minimumFractionDigits: 2,
+            });
+            
+            pagoFechaInput.value = new Date().toISOString().split('T')[0];
+            
+            const updateTotalSummary = () => {
+                const totalPayments = paymentsData.reduce((sum, pago) => sum + (pago.cantidad * pago.precio), 0);
+                const totalExpenses = expensesData.reduce((sum, gasto) => sum + gasto.costo, 0);
+                const totalBudget = totalPayments + totalExpenses;
+
+                totalPaymentsAmountElement.textContent = formatter.format(totalPayments);
+                totalExpensesAmountElement.textContent = formatter.format(totalExpenses);
+                totalBudgetAmountElement.textContent = formatter.format(totalBudget);
+            };
+
+            onSnapshot(eventDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    eventName = data.name;
+                    eventNameHeader.textContent = eventName;
+                    
+                    if (data.estimatedGuests) {
+                        estimatedAdults = data.estimatedGuests.adultos || 0;
+                        estimatedTeens = data.estimatedGuests.adolescentesNinos || 0;
+                        estimatedAdultsInput.value = estimatedAdults;
+                        estimatedTeensChildrenInput.value = estimatedTeens;
+                        updateEstimatedTotal();
+                    }
+                } else {
+                    eventNameHeader.textContent = 'Evento no encontrado';
+                }
+            }, (error) => console.error("Error al cargar datos del evento:", error));
+
+            const updateEstimatedGuests = async () => {
+                estimatedAdults = parseInt(estimatedAdultsInput.value) || 0;
+                estimatedTeens = parseInt(estimatedTeensChildrenInput.value) || 0;
+                try {
+                    await setDoc(eventDocRef, { 
+                        estimatedGuests: { adultos: estimatedAdults, adolescentesNinos: estimatedTeens } 
+                    }, { merge: true });
+                } catch (e) {
+                    console.error("Error al actualizar las estimaciones:", e);
+                }
+            };
+
+            const updateEstimatedTotal = () => {
+                estimatedTotalInput.value = (parseInt(estimatedAdultsInput.value, 10) || 0) + (parseInt(estimatedTeensChildrenInput.value, 10) || 0);
+            };
+
+            estimatedAdultsInput.addEventListener('input', () => {
+                updateEstimatedTotal();
+                updateEstimatedGuests();
+            });
+            
+            estimatedTeensChildrenInput.addEventListener('input', () => {
+                updateEstimatedTotal();
+                updateEstimatedGuests();
+            });
+
+            onSnapshot(query(paymentsCollectionRef, orderBy('timestamp', 'desc')), (snapshot) => {
+                paymentsList.innerHTML = '';
+                paymentsData = [];
+                let totalAdultos = 0;
+                let totalAdolescentes = 0;
+
+                if (snapshot.empty) {
+                    paymentsList.innerHTML = '<p>No hay pagos registrados aún.</p>';
+                } else {
+                    snapshot.forEach(doc => {
+                        const pago = { id: doc.id, ...doc.data() };
+                        paymentsData.push(pago);
+                        const li = document.createElement('li');
+                        li.className = 'payment-item';
+                        
+                        let montoTotal = pago.cantidad * pago.precio;
+                        const tipoInvitado = pago.guestType === 'adulto' ? 'Adulto' : 'Adolescente/Infantil';
+                        const fechaDePago = pago.fechaPago ? new Date(pago.fechaPago + 'T00:00:00').toLocaleDateString('es-AR') : 'Sin fecha';
+                        const pagoDetalle = `${pago.cantidad} ${tipoInvitado}(s) a ${formatter.format(pago.precio)} c/u`;
+
+                        li.innerHTML = `
+                            <span>${pagoDetalle} (${pago.medio.charAt(0).toUpperCase() + pago.medio.slice(1)}) - ${fechaDePago}</span>
+                            <span>${formatter.format(montoTotal)}</span>
+                            <button class="delete-payment-btn" data-id="${doc.id}">×</button>
+                        `;
+                        paymentsList.appendChild(li);
+                        
+                        if (pago.guestType === 'adulto') totalAdultos += pago.cantidad;
+                        else totalAdolescentes += pago.cantidad;
+                    });
+                }
+                
+                guestSummaryList.innerHTML = `
+                    <div class="guest-summary-item">
+                        <p>Total Adultos Pagados:</p><p>${totalAdultos}</p>
+                    </div>
+                    <div class="guest-summary-item">
+                        <p>Total Adolescentes/Infantiles Pagados:</p><p>${totalAdolescentes}</p>
+                    </div>
+                `;
+                updateTotalSummary();
+            }, (error) => console.error("Error al escuchar pagos:", error));
+            
+            onSnapshot(query(expensesCollectionRef, orderBy('timestamp', 'desc')), (snapshot) => {
+                expensesList.innerHTML = '';
+                expensesData = [];
+
+                if (snapshot.empty) {
+                    expensesList.innerHTML = '<p>No hay gastos extras registrados aún.</p>';
+                } else {
+                    snapshot.forEach(doc => {
+                        const gasto = { id: doc.id, ...doc.data() };
+                        expensesData.push(gasto);
+                        const li = document.createElement('li');
+                        li.className = 'expense-item';
+                        li.innerHTML = `
+                            <span>${gasto.nombre}</span>
+                            <span>${formatter.format(gasto.costo)}</span>
+                            <button class="delete-expense-btn" data-id="${doc.id}">×</button>
+                        `;
+                        expensesList.appendChild(li);
+                    });
+                }
+                updateTotalSummary();
+            }, (error) => console.error("Error al escuchar gastos:", error));
+            
+            paymentForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const data = {
+                    medio: pagoMedioSelect.value,
+                    fechaPago: pagoFechaInput.value,
+                    cantidad: parseFloat(guestQuantityInput.value) || 0,
+                    guestType: guestTypeSelect.value,
+                    precio: parseFloat(guestPriceInput.value) || 0,
+                    timestamp: new Date().getTime()
+                };
+                
+                if (data.cantidad > 0 && data.precio >= 0) {
+                    try {
+                        await addDoc(paymentsCollectionRef, data);
+                        paymentForm.reset();
+                        pagoFechaInput.value = new Date().toISOString().split('T')[0];
+                    } catch (e) { console.error('Error al agregar pago:', e); }
+                } else {
+                    alert('La cantidad y el precio deben ser valores positivos.');
+                }
+            });
+            
+            expenseForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const data = {
+                    nombre: expenseNameInput.value.trim(),
+                    costo: parseFloat(expenseCostInput.value) || 0,
+                    timestamp: new Date().getTime()
+                };
+                if (data.nombre && data.costo > 0) {
+                    try {
+                        await addDoc(expensesCollectionRef, data);
+                        expenseForm.reset();
+                    } catch (e) { console.error('Error al agregar gasto:', e); }
+                } else {
+                    alert('El nombre del gasto no puede estar vacío y el costo debe ser mayor a 0.');
+                }
+            });
+            
+            const createDeleteListener = (listElement, collectionRef, type) => {
+                listElement.addEventListener('click', async (e) => {
+                    if (e.target.classList.contains(`delete-${type}-btn`)) {
+                        const docId = e.target.dataset.id;
+                        if (confirm(`¿Estás seguro de que quieres eliminar este ${type}?`)) {
+                            try {
+                                await deleteDoc(doc(collectionRef, docId));
+                            } catch (e) { console.error(`Error al eliminar el ${type}:`, e); }
+                        }
+                    }
+                });
+            };
+
+            createDeleteListener(paymentsList, paymentsCollectionRef, 'payment');
+            createDeleteListener(expensesList, expensesCollectionRef, 'expense');
+
+            window.imprimirPresupuesto = function() {
+                const eventName = eventNameHeader.textContent;
+                const estimatedAdults = estimatedAdultsInput.value;
+                const estimatedTeensChildren = estimatedTeensChildrenInput.value;
+                const estimatedTotal = estimatedTotalInput.value;
+
+                const pagosHtml = paymentsData.map(pago => {
+                    const tipoInvitado = pago.guestType === 'adulto' ? 'Adulto' : 'Adolescente/Infantil';
+                    const fechaDePago = pago.fechaPago ? new Date(pago.fechaPago + 'T00:00:00').toLocaleDateString('es-AR') : 'Sin fecha';
+                    const montoTotal = pago.cantidad * pago.precio;
+                    return `<div class="print-item"><strong>${pago.cantidad} ${tipoInvitado}(s) a ${formatter.format(pago.precio)} c/u:</strong> <span>${formatter.format(montoTotal)}</span></div>`;
+                }).join('');
+
+                const gastosHtml = expensesData.map(gasto => {
+                    return `<div class="print-item"><strong>${gasto.nombre}:</strong> <span>${formatter.format(gasto.costo)}</span></div>`;
+                }).join('');
+
+                const totalPayments = totalPaymentsAmountElement.textContent;
+                const totalExpenses = totalExpensesAmountElement.textContent;
+                const totalBudget = totalBudgetAmountElement.textContent;
+
+                const contenidoImprimible = `
+                    <div class="print-content">
+                        <header>
+                            <h1>Presupuesto del Evento: ${eventName}</h1>
+                        </header>
+                        
+                        <div class="print-section">
+                            <h2>Estimado de Invitados</h2>
+                            <div class="print-item"><strong>Adultos:</strong> ${estimatedAdults}</div>
+                            <div class="print-item"><strong>Adolescentes/Niños:</strong> ${estimatedTeensChildren}</div>
+                            <div class="print-item"><strong>Total Estimado:</strong> ${estimatedTotal}</div>
+                        </div>
+
+                        <div class="print-section">
+                            <h2>Pagos de Cubiertos</h2>
+                            ${pagosHtml || '<p>No hay pagos registrados.</p>'}
+                        </div>
+
+                        <div class="print-section">
+                            <h2>Otros Gastos</h2>
+                            ${gastosHtml || '<p>No hay gastos registrados.</p>'}
+                        </div>
+
+                        <div class="print-section">
+                            <h2>Resumen del Presupuesto</h2>
+                            <div class="print-item"><strong>Total de Pagos (Cubiertos):</strong> ${totalPayments}</div>
+                            <div class="print-item"><strong>Total de Otros Gastos:</strong> ${totalExpenses}</div>
+                            <div class="print-item"><strong>Total General del Evento:</strong> ${totalBudget}</div>
+                        </div>
+                    </div>
+                `;
+
+                const ventanaImpresion = window.open('', '_blank');
+                ventanaImpresion.document.write('<html><head><title>Presupuesto Imprimible</title>');
+                ventanaImpresion.document.write('<style>');
+                ventanaImpresion.document.write(document.querySelector('style').textContent);
+                ventanaImpresion.document.write('</style></head><body>');
+                ventanaImpresion.document.write(contenidoImprimible);
+                ventanaImpresion.document.write('</body></html>');
+                ventanaImpresion.document.close();
+
+                ventanaImpresion.onload = function() {
+                    ventanaImpresion.print();
+                    ventanaImpresion.onafterprint = function() {
+                        ventanaImpresion.close();
+                    };
+                };
+            }
+        });
+    </script>
+</body>
+</html>

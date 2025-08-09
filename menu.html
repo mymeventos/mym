@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú - Salón M&M</title>
+    <style>
+        :root {
+            --primary-color: #e91e63;
+            --background-color: #f4f7f6;
+            --card-bg-color: #ffffff;
+            --text-color: #333;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+            box-shadow: var(--box-shadow);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+        
+        .header h2 {
+            margin: 5px 0 0;
+            font-size: 1.2rem;
+            font-weight: normal;
+        }
+
+        .content {
+            background-color: var(--card-bg-color);
+            padding: 2rem;
+            border-radius: 0 0 10px 10px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .form-group input[type="text"], .form-group input[type="number"], .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        .flex-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .flex-group > div {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .button-group button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .save-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .save-btn:hover {
+            background-color: #c2185b;
+        }
+
+        .back-btn {
+            background-color: #ccc;
+            color: var(--text-color);
+        }
+
+        .back-btn:hover {
+            background-color: #999;
+        }
+
+        .pdf-btn {
+            background-color: #36a2eb;
+            color: white;
+        }
+        
+        .pdf-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .menu-title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Separación de 10px entre el título y la casilla */
+            margin-bottom: 1rem;
+        }
+        .menu-title-group h2 {
+            margin: 0;
+            flex-shrink: 0;
+        }
+        .menu-title-group input[type="number"] {
+            width: 80px;
+            flex-shrink: 0;
+        }
+
+        /* Estilos específicos para la impresión */
+        @media print {
+            body {
+                background-color: white;
+                color: black;
+                padding: 0;
+            }
+            .container, .header, .content, .form-group, .flex-group, h1, h2 {
+                box-shadow: none;
+                background-color: transparent;
+                padding: 0;
+                margin: 0;
+            }
+            .button-group, input, textarea, label {
+                display: none;
+            }
+            .print-content {
+                display: block;
+                font-family: sans-serif;
+                color: black;
+                padding: 20px;
+            }
+            .print-section {
+                border: 1px solid #ccc;
+                padding: 15px;
+                margin-bottom: 20px;
+                border-radius: 8px;
+            }
+            .print-section h2 {
+                color: #e91e63;
+                border-bottom: 2px solid #e91e63;
+                padding-bottom: 5px;
+                margin-bottom: 10px;
+            }
+            .print-item {
+                margin-bottom: 10px;
+            }
+            .print-item strong {
+                display: inline-block;
+                width: 150px;
+            }
+            .flex-row {
+                display: flex;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 id="event-name-header">Menú del Evento</h1>
+            <h2 id="event-date-header"></h2>
+        </header>
+
+        <main class="content">
+            <div class="form-group">
+                <div class="menu-title-group">
+                    <h2>Menú Infantil</h2>
+                    <input type="number" id="cant-infantiles" min="0" placeholder="Cantidad">
+                </div>
+                <label for="menu-infantil-entrada">Entrada</label>
+                <input type="text" id="menu-infantil-entrada">
+                <label for="menu-infantil-principal">Principal</label>
+                <input type="text" id="menu-infantil-principal">
+                <label for="menu-infantil-postre">Postre</label>
+                <input type="text" id="menu-infantil-postre">
+            </div>
+
+            <div class="form-group">
+                <div class="menu-title-group">
+                    <h2>Menú Adulto</h2>
+                    <input type="number" id="cant-adultos" min="0" placeholder="Cantidad">
+                </div>
+                <label for="menu-adulto-entrada">Entrada</label>
+                <input type="text" id="menu-adulto-entrada">
+                <label for="menu-adulto-principal">Principal</label>
+                <input type="text" id="menu-adulto-principal">
+                <label for="menu-adulto-postre">Postre</label>
+                <input type="text" id="menu-adulto-postre">
+            </div>
+
+            <div class="form-group">
+                <h2>Restricciones Alimentarias</h2>
+                <div class="flex-group">
+                    <div>
+                        <label for="cant-celiacos">Celíacos (Cantidad)</label>
+                        <input type="number" id="cant-celiacos" min="0">
+                    </div>
+                    <div>
+                        <label for="cant-vegetarianos">Vegetarianos (Cantidad)</label>
+                        <input type="number" id="cant-vegetarianos" min="0">
+                    </div>
+                    <div>
+                        <label for="cant-veganos">Veganos (Cantidad)</label>
+                        <input type="number" id="cant-veganos" min="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="otras-restricciones">Otras Restricciones</label>
+                <textarea id="otras-restricciones" rows="4"></textarea>
+            </div>
+
+            <div class="button-group">
+                <button class="save-btn">Guardar</button>
+                <button class="pdf-btn" onclick="imprimirMenu()">Descargar PDF</button>
+                <button class="back-btn" onclick="window.location.href='index.html'">Volver</button>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5RTAhwU-HlvMl_B2jmzNvrYRefOjGqrs",
+            authDomain: "flor-ee15d.firebaseapp.com",
+            projectId: "flor-ee15d",
+            storageBucket: "flor-ee15d.firebasestorage.app",
+            messagingSenderId: "814685471419",
+            appId: "1:814685471419:web:0d2ffe96939349fbe6df9e",
+            measurementId: "G-NJ427BC4ZT"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let eventId = new URLSearchParams(window.location.search).get('id');
+        const eventRef = doc(db, 'events', eventId);
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (eventId) {
+                const eventSnap = await getDoc(eventRef);
+                if (eventSnap.exists()) {
+                    const data = eventSnap.data();
+                    document.getElementById('event-name-header').textContent = `Menú para ${data.name}`;
+                    document.getElementById('event-date-header').textContent = `Fecha: ${data.date}`;
+
+                    const menuInfantil = data.menu?.infantil || {};
+                    document.getElementById('cant-infantiles').value = menuInfantil.cantidad || 0;
+                    document.getElementById('menu-infantil-entrada').value = menuInfantil.entrada || '';
+                    document.getElementById('menu-infantil-principal').value = menuInfantil.principal || '';
+                    document.getElementById('menu-infantil-postre').value = menuInfantil.postre || '';
+
+                    const menuAdulto = data.menu?.adulto || {};
+                    document.getElementById('cant-adultos').value = menuAdulto.cantidad || 0;
+                    document.getElementById('menu-adulto-entrada').value = menuAdulto.entrada || '';
+                    document.getElementById('menu-adulto-principal').value = menuAdulto.principal || '';
+                    document.getElementById('menu-adulto-postre').value = menuAdulto.postre || '';
+
+                    const restricciones = data.restricciones || {};
+                    document.getElementById('cant-celiacos').value = restricciones.celiacos || 0;
+                    document.getElementById('cant-vegetarianos').value = restricciones.vegetarianos || 0;
+                    document.getElementById('cant-veganos').value = restricciones.veganos || 0;
+                    document.getElementById('otras-restricciones').value = restricciones.otros || '';
+                }
+            }
+        });
+
+        document.querySelector('.save-btn').addEventListener('click', async () => {
+            const dataToSave = {
+                menu: {
+                    infantil: {
+                        cantidad: document.getElementById('cant-infantiles').value,
+                        entrada: document.getElementById('menu-infantil-entrada').value,
+                        principal: document.getElementById('menu-infantil-principal').value,
+                        postre: document.getElementById('menu-infantil-postre').value,
+                    },
+                    adulto: {
+                        cantidad: document.getElementById('cant-adultos').value,
+                        entrada: document.getElementById('menu-adulto-entrada').value,
+                        principal: document.getElementById('menu-adulto-principal').value,
+                        postre: document.getElementById('menu-adulto-postre').value,
+                    }
+                },
+                restricciones: {
+                    celiacos: document.getElementById('cant-celiacos').value,
+                    vegetarianos: document.getElementById('cant-vegetarianos').value,
+                    veganos: document.getElementById('cant-veganos').value,
+                    otros: document.getElementById('otras-restricciones').value,
+                }
+            };
+            
+            try {
+                await updateDoc(eventRef, dataToSave);
+                alert("Datos guardados correctamente.");
+            } catch (error) {
+                console.error("Error al guardar los datos:", error);
+                alert("Error al guardar los datos.");
+            }
+        });
+
+        window.imprimirMenu = function() {
+            // Recolectar datos del formulario
+            const eventName = document.getElementById('event-name-header').textContent.replace('Menú para ', '');
+            const eventDate = document.getElementById('event-date-header').textContent.replace('Fecha: ', '');
+
+            const cantInfantiles = document.getElementById('cant-infantiles').value;
+            const infantilEntrada = document.getElementById('menu-infantil-entrada').value;
+            const infantilPrincipal = document.getElementById('menu-infantil-principal').value;
+            const infantilPostre = document.getElementById('menu-infantil-postre').value;
+
+            const cantAdultos = document.getElementById('cant-adultos').value;
+            const adultoEntrada = document.getElementById('menu-adulto-entrada').value;
+            const adultoPrincipal = document.getElementById('menu-adulto-principal').value;
+            const adultoPostre = document.getElementById('menu-adulto-postre').value;
+
+            const cantCeliacos = document.getElementById('cant-celiacos').value;
+            const cantVegetarianos = document.getElementById('cant-vegetarianos').value;
+            const cantVeganos = document.getElementById('cant-veganos').value;
+            const otrasRestricciones = document.getElementById('otras-restricciones').value;
+
+            // Generar el contenido HTML para la impresión
+            const contenidoImprimible = `
+                <div class="print-content">
+                    <h1>Menú para ${eventName}</h1>
+                    <h2>Fecha: ${eventDate}</h2>
+                    <div class="print-section">
+                        <h2>Menú Infantil (${cantInfantiles || '0'} personas)</h2>
+                        <div class="print-item"><strong>Entrada:</strong> ${infantilEntrada || '-'}</div>
+                        <div class="print-item"><strong>Principal:</strong> ${infantilPrincipal || '-'}</div>
+                        <div class="print-item"><strong>Postre:</strong> ${infantilPostre || '-'}</div>
+                    </div>
+                    <div class="print-section">
+                        <h2>Menú Adulto (${cantAdultos || '0'} personas)</h2>
+                        <div class="print-item"><strong>Entrada:</strong> ${adultoEntrada || '-'}</div>
+                        <div class="print-item"><strong>Principal:</strong> ${adultoPrincipal || '-'}</div>
+                        <div class="print-item"><strong>Postre:</strong> ${adultoPostre || '-'}</div>
+                    </div>
+                    <div class="print-section">
+                        <h2>Restricciones Alimentarias</h2>
+                        <div class="flex-row">
+                            <div class="print-item"><strong>Celíacos:</strong> ${cantCeliacos || 0}</div>
+                            <div class="print-item"><strong>Vegetarianos:</strong> ${cantVegetarianos || 0}</div>
+                            <div class="print-item"><strong>Veganos:</strong> ${cantVeganos || 0}</div>
+                        </div>
+                        <div class="print-item"><strong>Otras Restricciones:</strong> ${otrasRestricciones || '-'}</div>
+                    </div>
+                </div>
+            `;
+
+            const ventanaImpresion = window.open('', '_blank');
+            ventanaImpresion.document.write('<html><head><title>Menú Imprimible</title>');
+            ventanaImpresion.document.write('<style>');
+            ventanaImpresion.document.write(document.querySelector('style').textContent);
+            ventanaImpresion.document.write('</style></head><body>');
+            ventanaImpresion.document.write(contenidoImprimible);
+            ventanaImpresion.document.write('</body></html>');
+            ventanaImpresion.document.close();
+
+            ventanaImpresion.onload = function() {
+                ventanaImpresion.print();
+                ventanaImpresion.onafterprint = function() {
+                    ventanaImpresion.close();
+                };
+            };
+        }
+    </script>
+</body>
+</html>
