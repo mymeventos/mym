@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizador de Mesas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <aside id="sidebar">
+        <section class="controls-section">
+            <h2>Gestión de Salón</h2>
+            <div class="input-group">
+                <label for="ancho_salon">Ancho Salón (m)</label>
+                <input type="number" id="ancho_salon" value="20" min="1" step="0.1">
+            </div>
+            <div class="input-group">
+                <label for="alto_salon">Alto Salón (m)</label>
+                <input type="number" id="alto_salon" value="10" min="1" step="0.1">
+            </div>
+            <button class="btn btn-primary" id="btn-crear-salon">Aplicar Dimensiones</button>
+        </section>
+
+        <section class="controls-section">
+            <h2>Crear Mesas</h2>
+            <div class="input-group">
+                <label for="nombre_mesa">Nombre de la Mesa</label>
+                <input type="text" id="nombre_mesa">
+            </div>
+            <div class="input-group">
+                <label for="ancho_mesa">Ancho (m)</label>
+                <input type="number" id="ancho_mesa" min="0.1" step="0.1">
+            </div>
+            <div class="input-group">
+                <label for="alto_mesa">Alto (m)</label>
+                <input type="number" id="alto_mesa" min="0.1" step="0.1">
+            </div>
+            <div class="input-group">
+                <label for="capacidad_mesa">Capacidad</label>
+                <input type="number" id="capacidad_mesa" min="1" step="1">
+            </div>
+            <div id="mesa-botones">
+                <button class="btn btn-primary mesa-btn" id="btn-agregar-cuadrada">⬜</button>
+                <button class="btn btn-primary mesa-btn" id="btn-agregar-redonda">🔵</button>
+                <button class="btn btn-primary mesa-btn" id="btn-agregar-rectangular">▭</button>
+            </div>
+        </section>
+
+        <section class="controls-section">
+            <h2>Asignación de Invitados</h2>
+            <div class="input-group">
+                <label for="lista_invitados">Lista de invitados (Apellido Nombre [Mesa])</label>
+                <textarea id="lista_invitados" rows="5" placeholder="Ejemplo:&#10;Gomez Juan Mesa1&#10;Perez Ana&#10;Lopez Sofia MesaVIP"></textarea>
+            </div>
+            <div class="options-group">
+                <button class="btn btn-primary" id="btn-importar-invitados">Importar Invitados</button>
+                <button class="btn btn-secondary" id="btn-asignar-auto">Asignar Automáticamente</button>
+            </div>
+        </section>
+
+        <section class="controls-section">
+            <h2>Opciones de Visualización</h2>
+            <div class="options-group">
+                <label class="switch">
+                    <input type="checkbox" id="mostrar_apellidos_checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+                <label for="mostrar_apellidos_checkbox">Mostrar Apellidos</label>
+            </div>
+        </section>
+    </aside>
+
+    <main id="main-content">
+        <div id="top-bar">
+            <button id="descargar-plano-btn">Descargar Plano</button>
+        </div>
+        <div class="salon-tabs">
+            <button class="tab-btn active" id="tab-salon-1">Salón 1</button>
+            <button class="tab-btn" id="tab-salon-2">Salón 2</button>
+            <button class="tab-btn" id="tab-salon-3">Salón 3</button>
+        </div>
+        <div id="salon-container">
+            <div id="salon-1" class="salon"></div>
+            <div id="salon-2" class="salon hidden"></div>
+            <div id="salon-3" class="salon hidden"></div>
+        </div>
+    </main>
+    
+    <aside id="invitados-pendientes-contenedor">
+        <h2>Invitados Pendientes</h2>
+        <ul id="lista-invitados-pendientes"></ul>
+    </aside>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>

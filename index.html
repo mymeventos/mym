@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Eventos</title>
+    <style>
+        :root {
+            --primary-color: #e91e63;
+            --secondary-color: #007BFF;
+            --tertiary-color: #4CAF50;
+            --decoracion-color: #FF9800;
+            --accesorios-color: #9C27B0;
+            --menu-color: #36a2eb;
+            --plano-color: #6C5CE7; /* Nuevo color para el botón de plano */
+            --background-color: #f4f7f6;
+            --card-bg-color: #ffffff;
+            --text-color: #333;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+
+        .main-content {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .event-section, .summary-section {
+            background-color: var(--card-bg-color);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .form-group input[type="text"], .form-group input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #c2185b;
+        }
+        
+        #eventos-container {
+            display: grid;
+            gap: 20px;
+        }
+
+        .month-section {
+            margin-top: 2rem;
+        }
+
+        .month-section h2 {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .event-card {
+            background-color: #f1f8e9;
+            padding: 1.5rem;
+            border-left: 5px solid #8bc34a;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease;
+            flex-wrap: wrap;
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .event-info {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .event-info h3 {
+            margin: 0 0 5px 0;
+        }
+        
+        .event-info p {
+            margin: 0;
+            color: #555;
+        }
+        
+        .event-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .event-actions a, .event-actions button {
+            text-decoration: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+        
+        .event-actions .egresados-btn {
+            background-color: var(--secondary-color);
+        }
+        
+        .event-actions .egresados-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .event-actions .presupuesto-btn {
+            background-color: var(--tertiary-color);
+        }
+
+        .event-actions .presupuesto-btn:hover {
+            background-color: #388E3C;
+        }
+
+        .event-actions .decoracion-btn {
+            background-color: var(--decoracion-color);
+        }
+
+        .event-actions .decoracion-btn:hover {
+            background-color: #E68A00;
+        }
+
+        .event-actions .accesorios-btn {
+            background-color: var(--accesorios-color);
+        }
+
+        .event-actions .accesorios-btn:hover {
+            background-color: #7B1FA2;
+        }
+
+        .event-actions .menu-btn {
+            background-color: var(--menu-color);
+        }
+
+        .event-actions .menu-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .event-actions .plano-btn {
+            background-color: var(--plano-color); /* Nuevo estilo para el botón Plano */
+        }
+        
+        .event-actions .plano-btn:hover {
+            background-color: #5345b5;
+        }
+        
+        .event-actions .delete-event-btn {
+            background-color: #f44336;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .event-actions .delete-event-btn:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <h1>Gestor de Eventos</h1>
+    </header>
+
+    <main class="main-content">
+        <section class="event-section">
+            <h2>Añadir Nuevo Evento</h2>
+            <form id="add-event-form">
+                <div class="form-group">
+                    <label for="event-name">Nombre del Evento</label>
+                    <input type="text" id="event-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="event-date">Fecha del Evento</label>
+                    <input type="date" id="event-date" required>
+                </div>
+                <button type="submit">Añadir Evento</button>
+            </form>
+        </section>
+        
+        <section class="events-list-section">
+            <h2>Próximos Eventos</h2>
+            <div id="eventos-container">
+                </div>
+        </section>
+    </main>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, doc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA5RTAhwU-HlvMl_B2jmzNvrYRefOjGqrs",
+            authDomain: "flor-ee15d.firebaseapp.com",
+            projectId: "flor-ee15d",
+            storageBucket: "flor-ee15d.firebasestorage.app",
+            messagingSenderId: "814685471419",
+            appId: "1:814685471419:web:0d2ffe96939349fbe6df9e",
+            measurementId: "G-NJ427BC4ZT"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const addEventForm = document.getElementById('add-event-form');
+            const eventNameInput = document.getElementById('event-name');
+            const eventDateInput = document.getElementById('event-date');
+            const eventosContainer = document.getElementById('eventos-container');
+            const eventsCollection = collection(db, 'events');
+
+            const renderEvents = async () => {
+                eventosContainer.innerHTML = '';
+                const events = [];
+                const q = query(eventsCollection, orderBy('date'));
+                const querySnapshot = await getDocs(q);
+                
+                querySnapshot.forEach(doc => {
+                    events.push({ id: doc.id, ...doc.data() });
+                });
+                
+                if (events.length === 0) {
+                    eventosContainer.innerHTML = '<p>No hay eventos añadidos aún.</p>';
+                    return;
+                }
+
+                const eventsByMonth = events.reduce((acc, event) => {
+                    const date = new Date(event.date + 'T00:00:00'); 
+                    const year = date.getFullYear();
+                    const month = date.toLocaleString('es-ES', { month: 'long' });
+                    const key = `${year}-${month}`;
+
+                    if (!acc[key]) {
+                        acc[key] = {
+                            monthYear: `${month.charAt(0).toUpperCase() + month.slice(1)} ${year}`,
+                            events: []
+                        };
+                    }
+                    acc[key].events.push(event);
+                    return acc;
+                }, {});
+
+                for (const key in eventsByMonth) {
+                    const monthSection = document.createElement('div');
+                    monthSection.className = 'month-section';
+                    monthSection.innerHTML = `<h2>${eventsByMonth[key].monthYear}</h2>`;
+
+                    eventsByMonth[key].events.forEach(event => {
+                        const eventCard = document.createElement('div');
+                        eventCard.className = 'event-card';
+                        
+                        const eventInfo = document.createElement('div');
+                        eventInfo.className = 'event-info';
+                        eventInfo.innerHTML = `
+                            <h3>${event.name}</h3>
+                            <p>Fecha: ${event.date}</p>
+                        `;
+
+                        const eventActions = document.createElement('div');
+                        eventActions.className = 'event-actions';
+                        eventActions.innerHTML = `
+                            <a href="presupuesto.html?id=${event.id}" class="presupuesto-btn">Presupuesto</a>
+                            <a href="decoracion.html?id=${event.id}" class="decoracion-btn">Decoración</a>
+                            <a href="accesorios.html?id=${event.id}" class="accesorios-btn">Accesorios</a>
+                            <a href="egresados.html?id=${event.id}" class="egresados-btn">Egresados</a>
+                            <a href="menu.html?id=${event.id}" class="menu-btn">Menú</a>
+                            <a href="organizador.html?id=${event.id}" class="plano-btn">Plano</a>
+                            <button class="delete-event-btn" data-event-id="${event.id}">Eliminar</button>
+                        `;
+
+                        eventCard.appendChild(eventInfo);
+                        eventCard.appendChild(eventActions);
+                        monthSection.appendChild(eventCard);
+                    });
+                    eventosContainer.appendChild(monthSection);
+                }
+            };
+
+            addEventForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const eventName = eventNameInput.value;
+                const eventDate = eventDateInput.value;
+                
+                if (eventName && eventDate) {
+                    await addDoc(eventsCollection, {
+                        name: eventName,
+                        date: eventDate,
+                    });
+                    renderEvents();
+                    addEventForm.reset();
+                }
+            });
+
+            eventosContainer.addEventListener('click', async (e) => {
+                if (e.target.classList.contains('delete-event-btn')) {
+                    const eventId = e.target.dataset.eventId;
+                    if (confirm('¿Estás seguro de que quieres eliminar este evento?')) {
+                        const docRef = doc(db, 'events', eventId);
+                        await deleteDoc(docRef);
+                        renderEvents();
+                    }
+                }
+            });
+
+            renderEvents();
+        });
+    </script>
+</body>
+</html>
