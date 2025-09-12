@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 2em; background-color: #f0f2f5; color: #333; }
+        .container { max-width: 900px; margin: auto; background-color: #fff; padding: 2em; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 {
+            color: #2c3e50;
+            font-size: 2.8em;
+            font-weight: 700;
+            margin: 0 0 0.5em 0;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 0.2em;
+        }
+        h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            font-weight: 600;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 0.3em;
+            margin-top: 1.5em;
+        }
+        h3 {
+            color: #34495e;
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+        }
+        .form-section { background: #f9f9f9; padding: 1.5em; border-radius: 8px; margin-bottom: 2em; }
+        .form-section h3 { margin-top: 0; }
+        .form-group { margin-bottom: 1em; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], select, button { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        button { background-color: #3498db; color: white; border: none; cursor: pointer; margin-top: 10px; transition: background-color 0.3s; }
+        button:hover { background-color: #2980b9; }
+        .btn-delete { background-color: #e74c3c; color: white; }
+        .btn-delete:hover { background-color: #c0392b; }
+        .btn-priority { background-color: #2ecc71; color: white; }
+        .btn-priority:hover { background-color: #27ae60; }
+        .btn-edit { background-color: #f39c12; color: white; }
+        .btn-edit:hover { background-color: #e67e22; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+        .data-table th, .data-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        .data-table th { background-color: #ecf0f1; font-weight: bold; }
+        .deleted-row { color: #999; font-style: italic; background-color: #f2f2f2; }
+        .task-list-section { margin-bottom: 2em; }
+        .task-list { list-style: none; padding: 0; margin-top: 1em; }
+        .task-item { background: #fefefe; border: 1px solid #eee; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; }
+        .task-item.prioritaria { 
+            border: 2px solid #FFD700; /* Borde dorado alrededor de todo el recuadro */
+            background-color: #fffbe6; /* Fondo amarillo claro */
+            font-weight: bold; /* Texto en negrita */
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.5); /* Sombra sutil para mayor realce */
+        }
+        .task-item.completada { background-color: #e8f5e9; opacity: 0.7; }
+        .task-actions { display: flex; gap: 10px; }
+        .task-actions button { padding: 5px 10px; width: auto; font-size: 0.9em; margin-top: 0; }
+        .summary-box { background-color: #ecf0f1; padding: 1em; border-radius: 8px; margin-top: 1em; }
+        .summary-box h3 { margin-top: 0; }
+        .historical-data select { margin-top: 10px; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); display: flex; justify-content: center; align-items: center; font-size: 1.5em; z-index: 1000; }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading-overlay">Cargando...</div>
+    <div class="container" style="display: none;">
+        <h1>Panel de Administración</h1>
+        <div class="form-section">
+            <h2>Agregar Tarea</h2>
+            <div class="form-group">
+                <label for="task-description">Descripción de la Tarea:</label>
+                <input type="text" id="task-description" required>
+            </div>
+            <div class="form-group">
+                <label for="task-frequency">Frecuencia:</label>
+                <select id="task-frequency">
+                    <option value="semanales">Semanal</option>
+                    <option value="quincenales">Quincenal</option>
+                    <option value="mensuales">Mensual</option>
+                </select>
+            </div>
+            <button id="btn-add-task">Agregar Tarea</button>
+        </div>
+        <hr>
+        <h2 class="section-header">Registro de Ingresos y Egresos</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Ingreso</th>
+                    <th>Egreso</th>
+                    <th>Horas Trabajadas</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="access-log"></tbody>
+        </table>
+        <div class="summary-box">
+            <h3>Resumen de Horas</h3>
+            <p>Horas trabajadas esta semana: <span id="admin-weekly-hours">0</span></p>
+            <p>Horas trabajadas este mes: <span id="admin-monthly-hours">0</span></p>
+        </div>
+        <hr>
+        <h2 class="section-header">Gestión de Tareas</h2>
+        <button id="btn-duplicate-monthly" style="margin-bottom: 15px;">Duplicar Tareas Mensuales</button>
+        <div class="task-list-section">
+            <h3>Semanales</h3>
+            <ul id="admin-weekly-tasks" class="task-list"></ul>
+        </div>
+        <div class="task-list-section">
+            <h3>Quincenales</h3>
+            <ul id="admin-biweekly-tasks" class="task-list"></ul>
+        </div>
+        <div class="task-list-section">
+            <h3>Mensuales</h3>
+            <ul id="admin-monthly-tasks" class="task-list"></ul>
+        </div>
+        <hr>
+        <div class="historical-data">
+            <h2>Historial de Tareas y Horas</h2>
+            <select id="history-selector"></select>
+            <div id="historical-content"></div>
+        </div>
+        <hr>
+        <div class="deleted-records">
+            <h2>Registros Eliminados</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Horas Originales</th>
+                        <th>Motivo de Eliminación</th>
+                    </tr>
+                </thead>
+                <tbody id="deleted-log"></tbody>
+            </table>
+        </div>
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        // Importamos `Timestamp` para manejar correctamente los datos de fecha
+        import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, getDocs, query, where, writeBatch, getDoc, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgB61eVhI01GxFJrIU6vdaj7tb_eW2wSg",
+            authDomain: "horario-257e7.firebaseapp.com",
+            projectId: "horario-257e7",
+            storageBucket: "horario-257e7.firebasestorage.app",
+            messagingSenderId: "459854647850",
+            appId: "1:459854647850:web:e472731099c4a75259a953",
+            measurementId: "G-4CW3Y443R1"
+        };
+        const userId = "empleado_flor_01";
+        let db;
+        
+        async function initFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                document.getElementById('loading').style.display = 'none';
+                document.querySelector('.container').style.display = 'block';
+                setupRealtimeListeners();
+                setupEventListeners();
+                renderHistoricalSelector();
+            } catch (error) {
+                console.error("Error al inicializar Firebase:", error);
+                document.getElementById('loading').textContent = 'Error al cargar la aplicación.';
+            }
+        }
+        
+        function setupEventListeners() {
+            document.getElementById('btn-add-task').addEventListener('click', addTask);
+            document.getElementById('btn-duplicate-monthly').addEventListener('click', duplicateMonthlyTasks);
+            document.getElementById('history-selector').addEventListener('change', (e) => loadHistoricalData(e.target.value));
+        }
+        
+        async function setupRealtimeListeners() {
+            onSnapshot(collection(db, `users/${userId}/ingresos`), (snapshot) => {
+                renderAccessLog(snapshot);
+            });
+            onSnapshot(collection(db, `users/${userId}/tareas`), (snapshot) => {
+                renderTasksStatus(snapshot);
+            });
+            onSnapshot(collection(db, `deleted_records`), (snapshot) => {
+                renderDeletedLog(snapshot);
+            });
+        }
+        
+        window.onload = initFirebase;
+        
+        async function addTask() {
+            const description = document.getElementById('task-description').value;
+            const frequency = document.getElementById('task-frequency').value;
+            if (description.trim() === '') {
+                console.log('La descripción de la tarea no puede estar vacía.');
+                return;
+            }
+            try {
+                const newTask = {
+                    descripcion: description,
+                    frecuencia: frequency,
+                    completada: false,
+                    prioritaria: false,
+                    fechaCreacion: new Date()
+                };
+                await addDoc(collection(db, `users/${userId}/tareas`), newTask);
+                document.getElementById('task-description').value = '';
+            } catch (error) {
+                console.error("Error al agregar la tarea:", error);
+            }
+        }
+        
+        async function duplicateMonthlyTasks() {
+            const tasksRef = collection(db, `users/${userId}/tareas`);
+            const q = query(tasksRef, where('frecuencia', '==', 'mensuales'));
+            const monthlyTasks = await getDocs(q);
+            if (monthlyTasks.empty) {
+                alert('No hay tareas mensuales para duplicar.');
+                return;
+            }
+            const batch = writeBatch(db);
+            monthlyTasks.forEach(doc => {
+                const newTaskRef = doc(tasksRef);
+                const newTaskData = { ...doc.data(), completada: false, fechaCreacion: new Date() };
+                batch.set(newTaskRef, newTaskData);
+            });
+            try {
+                await batch.commit();
+                alert('Tareas mensuales duplicadas para el próximo mes.');
+            } catch (error) {
+                console.error('Error al duplicar tareas:', error);
+                alert('Error al duplicar tareas. Por favor, revisa la consola.');
+            }
+        }
+        
+        async function deleteTask(docId) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
+                return;
+            }
+            const taskRef = doc(db, `users/${userId}/tareas`, docId);
+            try {
+                await deleteDoc(taskRef);
+            } catch (error) {
+                console.error("Error al eliminar la tarea:", error);
+            }
+        }
+        
+        async function togglePriority(docId, currentStatus) {
+            const taskRef = doc(db, `users/${userId}/tareas`, docId);
+            try {
+                await updateDoc(taskRef, {
+                    prioritaria: !currentStatus
+                });
+            } catch (error) {
+                console.error("Error al actualizar la prioridad:", error);
+            }
+        }
+        
+        async function updateTaskDescription(docId, newDescription) {
+            const taskRef = doc(db, `users/${userId}/tareas`, docId);
+            try {
+                await updateDoc(taskRef, { descripcion: newDescription });
+            } catch (error) {
+                console.error("Error al actualizar la descripción de la tarea:", error);
+            }
+        }
+        
+        async function deleteAccessRecord(docId, recordData) {
+            const reason = prompt("Por favor, ingresa el motivo de la eliminación:");
+            if (!reason) { return; }
+            const ingresoTime = recordData.ingreso ? new Date(recordData.ingreso.toDate()) : null; // CAMBIO AQUÍ
+            const egresoTime = recordData.egreso ? new Date(recordData.egreso.toDate()) : null; // Y AQUÍ
+            const duracion = (ingresoTime && egresoTime) ? ((egresoTime - ingresoTime) / 1000 / 60 / 60) : 0;
+            try {
+                await addDoc(collection(db, `deleted_records`), {
+                    fecha: docId,
+                    ingreso: recordData.ingreso,
+                    egreso: recordData.egreso,
+                    duracion: duracion,
+                    motivo: reason,
+                    fechaEliminacion: new Date().toISOString()
+                });
+                await deleteDoc(doc(db, `users/${userId}/ingresos`, docId));
+            } catch (error) {
+                console.error("Error al eliminar el registro de acceso:", error);
+            }
+        }
+        
+        function renderAccessLog(snapshot) {
+            const logBody = document.getElementById('access-log');
+            logBody.innerHTML = '';
+            let totalWeeklyHours = 0;
+            let totalMonthlyHours = 0;
+            const now = new Date();
+            const firstDayOfWeek = new Date(now);
+            firstDayOfWeek.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+            firstDayOfWeek.setHours(0, 0, 0, 0);
+            snapshot.forEach(doc => {
+                const date = doc.id;
+                const entry = doc.data();
+                const entryDate = new Date(date.replace(/-/g, '/'));
+                const tr = document.createElement('tr');
+                // CAMBIO: Convierte el Timestamp de Firebase a un objeto Date de JavaScript
+                const ingresoDate = entry.ingreso ? entry.ingreso.toDate() : null;
+                const egresoDate = entry.egreso ? entry.egreso.toDate() : null;
+                
+                const ingresoTime = ingresoDate ? ingresoDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+                const egresoTime = egresoDate ? egresoDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+                
+                const duracion = egresoDate ? ((egresoDate - ingresoDate) / 1000 / 60 / 60).toFixed(2) + 'h' : 'N/A';
+                
+                tr.innerHTML = `
+                    <td>${date}</td>
+                    <td>${ingresoTime}</td>
+                    <td>${egresoTime}</td>
+                    <td>${duracion}</td>
+                    <td><button class="btn-delete" data-doc-id="${date}" data-record-data='${JSON.stringify(entry)}'>Eliminar</button></td>
+                `;
+                logBody.appendChild(tr);
+                if (egresoDate) {
+                    const durationInHours = (egresoDate - ingresoDate) / 1000 / 60 / 60;
+                    if (entryDate >= firstDayOfWeek && entryDate <= now) {
+                        totalWeeklyHours += durationInHours;
+                    }
+                    if (entryDate.getMonth() === now.getMonth() && entryDate.getFullYear() === now.getFullYear()) {
+                        totalMonthlyHours += durationInHours;
+                    }
+                }
+            });
+            document.querySelectorAll('#access-log .btn-delete').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const docId = e.target.dataset.docId;
+                    const recordData = JSON.parse(e.target.dataset.recordData); // Corregido: dataset.recordData
+                    deleteAccessRecord(docId, recordData);
+                });
+            });
+            document.getElementById('admin-weekly-hours').textContent = totalWeeklyHours.toFixed(2);
+            document.getElementById('admin-monthly-hours').textContent = totalMonthlyHours.toFixed(2);
+        }
+        
+        function renderDeletedLog(snapshot) {
+            const deletedLogBody = document.getElementById('deleted-log');
+            deletedLogBody.innerHTML = '';
+            snapshot.forEach(doc => {
+                const record = doc.data();
+                const tr = document.createElement('tr');
+                tr.classList.add('deleted-row');
+                const originalHours = record.duracion ? record.duracion.toFixed(2) + 'h' : 'N/A';
+                tr.innerHTML = `
+                    <td>${record.fecha}</td>
+                    <td>${originalHours}</td>
+                    <td>${record.motivo}</td>
+                `;
+                deletedLogBody.appendChild(tr);
+            });
+        }
+        
+        function renderTasksStatus(snapshot) {
+            const weeklyList = document.getElementById('admin-weekly-tasks');
+            const biweeklyList = document.getElementById('admin-biweekly-tasks');
+            const monthlyList = document.getElementById('admin-monthly-tasks');
+            weeklyList.innerHTML = '';
+            biweeklyList.innerHTML = '';
+            monthlyList.innerHTML = '';
+            snapshot.forEach(doc => {
+                const task = doc.data();
+                const docId = doc.id;
+                const li = document.createElement('li');
+                li.classList.add('task-item');
+                if (task.prioritaria) li.classList.add('prioritaria');
+                if (task.completada) li.classList.add('completada');
+                
+                li.innerHTML = `
+                    <span>[${task.frecuencia.toUpperCase()}] ${task.descripcion}</span>
+                    <div class="task-actions">
+                        <span style="color: ${task.completada ? 'green' : 'red'};">${task.completada ? 'Completada' : 'Pendiente'}</span>
+                        <button class="btn-priority" data-doc-id="${docId}" data-status="${task.prioritaria}">${task.prioritaria ? 'Quitar Prioridad' : 'Marcar Prioridad'}</button>
+                        <button class="btn-edit" data-doc-id="${docId}" data-description="${task.descripcion}">Editar</button>
+                        <button class="btn-delete" data-doc-id="${docId}">Eliminar</button>
+                    </div>
+                `;
+                
+                if (task.frecuencia === 'semanales') {
+                    weeklyList.appendChild(li);
+                } else if (task.frecuencia === 'quincenales') {
+                    biweeklyList.appendChild(li);
+                } else if (task.frecuencia === 'mensuales') {
+                    monthlyList.appendChild(li);
+                }
+            });
+            
+            document.querySelectorAll('.task-actions .btn-delete').forEach(button => {
+                button.addEventListener('click', (e) => deleteTask(e.target.dataset.docId));
+            });
+            
+            document.querySelectorAll('.task-actions .btn-priority').forEach(button => {
+                button.addEventListener('click', (e) => togglePriority(e.target.dataset.docId, e.target.dataset.status === 'true'));
+            });
+            
+            document.querySelectorAll('.task-actions .btn-edit').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const newDescription = prompt('Edita la descripción de la tarea:', e.target.dataset.description);
+                    if (newDescription && newDescription.trim() !== '') {
+                        updateTaskDescription(e.target.dataset.docId, newDescription);
+                    }
+                });
+            });
+        }
+        
+        function renderHistoricalSelector() {
+            const selector = document.getElementById('history-selector');
+            selector.innerHTML = '<option value="">Seleccionar Historial</option>';
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            for (let i = 2023; i <= currentYear; i++) {
+                for (let j = 0; j < 12; j++) {
+                    const option = document.createElement('option');
+                    option.value = `${i}-${j}`;
+                    option.textContent = `${months[j]} ${i}`;
+                    selector.appendChild(option);
+                }
+            }
+        }
+        
+        async function loadHistoricalData(key) {
+            const contentDiv = document.getElementById('historical-content');
+            contentDiv.innerHTML = '<p>Cargando datos históricos...</p>';
+            if (!key) {
+                contentDiv.innerHTML = '';
+                return;
+            }
+            const [year, month] = key.split('-');
+            const q = query(collection(db, `task_history`), where('mes', '==', parseInt(month)), where('año', '==', parseInt(year)));
+            const snapshot = await getDocs(q);
+            if (snapshot.empty) {
+                contentDiv.innerHTML = '<p>No hay datos históricos para este período.</p>';
+                return;
+            }
+            let html = '';
+            snapshot.forEach(doc => {
+                const record = doc.data();
+                const weekText = record.semana ? ` - Semana ${record.semana}` : '';
+                html += `<h4>Historial de ${record.mesNombre} ${record.año}${weekText}</h4>`;
+                html += `<ul>`;
+                record.tareas.forEach(task => {
+                    html += `<li>${task.descripcion} - **${task.completada ? 'Completada' : 'Pendiente'}**</li>`;
+                });
+                html += `</ul>`;
+            });
+            contentDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
